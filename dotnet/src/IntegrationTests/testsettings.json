@@ -9,6 +9,11 @@
     "ModelId": "mistral-tiny",
     "ApiKey": ""
   },
+  "MistralEmbeddings": {
+    "ServiceId": "mistral-embed",
+    "ModelId": "mistral-embed",
+    "ApiKey": ""
+  },
   "AzureOpenAI": {
     "ServiceId": "azure-text-davinci-003",
     "DeploymentName": "text-davinci-003",
