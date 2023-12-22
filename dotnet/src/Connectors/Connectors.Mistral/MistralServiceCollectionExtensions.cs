@@ -18,7 +18,7 @@ using Microsoft.SemanticKernel.TextToImage;
 namespace Microsoft.SemanticKernel;
 
 /// <summary>
-/// Provides extension methods for <see cref="IServiceCollection"/> and related classes to configure OpenAI and Azure OpenAI connectors.
+/// Provides extension methods for <see cref="IServiceCollection"/> and related classes to configure Mistral and Azure Mistral connectors.
 /// </summary>
 public static class MistralServiceCollectionExtensions
 {
@@ -28,7 +28,7 @@ public static class MistralServiceCollectionExtensions
     /// Adds the Mistral chat completion service to the list.
     /// </summary>
     /// <param name="builder">The <see cref="IKernelBuilder"/> instance to augment.</param>
-    /// <param name="apiKey">Azure OpenAI API key, see https://learn.microsoft.com/azure/cognitive-services/openai/quickstart</param>
+    /// <param name="apiKey">Azure Mistral API key, see https://learn.microsoft.com/azure/cognitive-services/Mistral/quickstart</param>
     /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <param name="modelId">Model identifier</param>
     /// <param name="httpClient">The HttpClient to use with this service.</param>
@@ -120,6 +120,67 @@ public static class MistralServiceCollectionExtensions
 
         return services;
     }
+    #endregion
+
+    #region Text Embedding
+
+    /// <summary>
+    /// Adds the Mistral text embeddings service to the list.
+    /// </summary>
+    /// <param name="builder">The <see cref="IKernelBuilder"/> instance to augment.</param>
+    /// <param name="modelId">Mistral model name</param>
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <param name="httpClient">The HttpClient to use with this service.</param>
+    /// <returns>The same instance as <paramref name="builder"/>.</returns>
+
+    public static IKernelBuilder AddMistralTextEmbeddingGeneration(
+        this IKernelBuilder builder,
+        string modelId,
+        string apiKey,
+        string? serviceId = null,
+        HttpClient? httpClient = null)
+    {
+
+#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        builder.Services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
+            new MistralTextEmbeddingGenerationService(
+                modelId,
+                apiKey,
+                httpClient,
+                serviceProvider.GetService<ILoggerFactory>()));
+#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds the Mistral text embeddings service to the list.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
+    /// <param name="modelId">Mistral model name</param>
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <returns>The same instance as <paramref name="services"/>.</returns>
+  
+    public static IServiceCollection AddMistralTextEmbeddingGeneration(
+        this IServiceCollection services,
+        string modelId,
+        string apiKey,
+        string? serviceId = null,
+        HttpClient? httpClient = null)
+    {
+
+#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        return services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
+            new MistralTextEmbeddingGenerationService(
+                modelId,
+                apiKey,
+                httpClient: httpClient,
+                serviceProvider.GetService<ILoggerFactory>()));
+#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+    }
+
     #endregion
 
 }
