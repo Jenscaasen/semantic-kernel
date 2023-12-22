@@ -17,7 +17,7 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// </summary>
 public sealed class MistralAITextAndChatCompletionService : IChatCompletionService, ITextGenerationService
 {
-    private readonly ClientCore _core;
+    private readonly MistralClientCore _core;
 
     /// <summary>
     /// Create an instance of the Mistral chat completion connector
@@ -30,7 +30,7 @@ public sealed class MistralAITextAndChatCompletionService : IChatCompletionServi
         string apiKey,
          HttpClient httpClient = null)
     {
-        this._core = new ClientCore(modelId, apiKey, httpClient);
+        this._core = new MistralClientCore(modelId, apiKey, httpClient);
 
         this._core.AddAttribute(AIServiceExtensions.ModelIdKey, modelId);
     }
