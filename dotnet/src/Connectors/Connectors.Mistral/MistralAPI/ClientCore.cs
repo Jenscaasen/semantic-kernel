@@ -72,7 +72,7 @@ internal class ClientCore
         ChatHistory history = new ChatHistory();
         history.AddUserMessage(text);
         var chatResult = await GetChatMessageContentsAsync(history, executionSettings, kernel, cancellationToken).ConfigureAwait(false);
-        return chatResult.Select(choice => new TextContent(choice.Content, this.DeploymentOrModelName, choice, Encoding.UTF8)).ToList();
+        return chatResult.Select(choice => new TextContent(choice.Content, this.DeploymentOrModelName, choice, Encoding.UTF8, choice.Metadata)).ToList();
 
     }
 
@@ -104,10 +104,16 @@ internal class ClientCore
         var responseData = await CallMistralAsync(chat).ConfigureAwait(false);
 
         ChatMessageContent content = new ChatMessageContent(AuthorRole.Assistant, responseData.choices[0].message.content);
+
+        IReadOnlyDictionary<string, object> metadata = new Dictionary<string, object>()
+        {
+            {"Usage", responseData.usage }
+        };
         return responseData.choices.Select(chatChoice => new ChatMessageContent(
            role: AuthorRole.Assistant,
            content: chatChoice.message.content,
-            modelId: responseData.model
+            modelId: responseData.model,
+            metadata: metadata
          )).ToList();
     }
 
@@ -140,6 +146,11 @@ internal class ClientCore
         var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
        var response = await _httpCient.PostAsync(url, content).ConfigureAwait(false);
         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+      
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpOperationException(response.StatusCode, responseContent, response.ReasonPhrase, new HttpRequestException());
+        }
 
         MistralAIApiResponse result = JsonSerializer.Deserialize< MistralAIApiResponse>(responseContent);
         return result;

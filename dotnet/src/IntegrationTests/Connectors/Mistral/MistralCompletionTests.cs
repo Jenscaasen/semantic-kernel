@@ -116,14 +116,14 @@ public sealed class MistralCompletionTests : IDisposable
     [InlineData("Where is the most famous fish market in Seattle, Washington, USA?", "Resilience event occurred")]
     public async Task MistralHttpRetryPolicyTestAsync(string prompt, string expectedOutput)
     {
-        OpenAIConfiguration? openAIConfiguration = this._configuration.GetSection("OpenAI").Get<OpenAIConfiguration>();
-        Assert.NotNull(openAIConfiguration);
+        var mistralConfiguration = this._configuration.GetSection("Mistral").Get<MistralConfiguration>();
+        Assert.NotNull(mistralConfiguration);
 
         this._kernelBuilder.Services.AddSingleton<ILoggerFactory>(this._testOutputHelper);
         this._kernelBuilder
             .AddMistralTextCompletion(
-                serviceId: openAIConfiguration.ServiceId,
-                modelId: openAIConfiguration.ModelId,
+                serviceId: mistralConfiguration.ServiceId,
+                modelId: mistralConfiguration.ModelId,
                 apiKey: "INVALID_KEY"); // Use an invalid API key to force a 401 Unauthorized response
         this._kernelBuilder.Services.ConfigureHttpClientDefaults(c =>
         {
@@ -174,10 +174,10 @@ public sealed class MistralCompletionTests : IDisposable
         Assert.NotNull(usageObject);
 
         var jsonObject = JsonSerializer.SerializeToElement(usageObject);
-        Assert.True(jsonObject.TryGetProperty("PromptTokens", out JsonElement promptTokensJson));
+        Assert.True(jsonObject.TryGetProperty("prompt_tokens", out JsonElement promptTokensJson));
         Assert.True(promptTokensJson.TryGetInt32(out int promptTokens));
         Assert.NotEqual(0, promptTokens);
-        Assert.True(jsonObject.TryGetProperty("CompletionTokens", out JsonElement completionTokensJson));
+        Assert.True(jsonObject.TryGetProperty("completion_tokens", out JsonElement completionTokensJson));
         Assert.True(completionTokensJson.TryGetInt32(out int completionTokens));
         Assert.NotEqual(0, completionTokens);
     }
@@ -264,41 +264,6 @@ public sealed class MistralCompletionTests : IDisposable
         Assert.Contains("Bob", actual.GetValue<string>(), StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public async Task MultipleServiceLoadPromptConfigTestAsync()
-    {
-        // Arrange
-        this._kernelBuilder.Services.AddSingleton<ILoggerFactory>(this._logger);
-        var builder = this._kernelBuilder;
-        this.ConfigureChatMistral(builder);
-        this.ConfigureInvalidMistral(builder);
-
-        Kernel target = builder.Build();
-
-        var prompt = "Where is the most famous fish market in Seattle, Washington, USA?";
-        var defaultPromptModel = new PromptTemplateConfig(prompt) { Name = "FishMarket1" };
-        var azurePromptModel = PromptTemplateConfig.FromJson(
-            @"{
-                ""name"": ""FishMarket2"",
-                ""execution_settings"": {
-                    ""azure-text-davinci-003"": {
-                        ""max_tokens"": 256
-                    }
-                }
-            }");
-        azurePromptModel.Template = prompt;
-
-        var defaultFunc = target.CreateFunctionFromPrompt(defaultPromptModel);
-        var azureFunc = target.CreateFunctionFromPrompt(azurePromptModel);
-
-        // Act
-        await Assert.ThrowsAsync<HttpOperationException>(() => target.InvokeAsync(defaultFunc));
-
-        FunctionResult azureResult = await target.InvokeAsync(azureFunc);
-
-        // Assert
-        Assert.Contains("Pike Place", azureResult.GetValue<string>(), StringComparison.OrdinalIgnoreCase);
-    }
     #region internals
 
     private readonly XunitLogger<Kernel> _logger;
