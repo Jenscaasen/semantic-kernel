@@ -19,44 +19,6 @@
     <Description>Semantic Kernel connectors for Mistral. Contains clients for text generation, chat completion.</Description>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Diagnostics\CompilerServicesAttributes.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Diagnostics\ExceptionExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Diagnostics\ExperimentalAttribute.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Diagnostics\IsExternalInit.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Diagnostics\NullableAttributes.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Diagnostics\Verify.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Http\HttpClientExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Http\HttpClientProvider.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Http\HttpContentExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Http\HttpHeaderValues.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Http\HttpRequest.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Linq\AsyncEnumerable.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\System\EnvExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\System\InternalTypeConverter.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\System\TypeConverterFactory.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Text\JsonOptionsCache.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Text\ReadOnlyMemoryConverter.cs" />
-    <Compile Remove="C:\Users\jensc\source\repos\semantic-kerneljc\dotnet\src\InternalUtilities\src\Type\TypeExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Diagnostics\CompilerServicesAttributes.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Diagnostics\ExceptionExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Diagnostics\ExperimentalAttribute.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Diagnostics\IsExternalInit.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Diagnostics\NullableAttributes.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Diagnostics\Verify.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Http\HttpClientExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Http\HttpClientProvider.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Http\HttpContentExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Http\HttpHeaderValues.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Http\HttpRequest.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Linq\AsyncEnumerable.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\System\EnvExtensions.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\System\InternalTypeConverter.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\System\TypeConverterFactory.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Text\JsonOptionsCache.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Text\ReadOnlyMemoryConverter.cs" />
-    <Compile Remove="C:\Users\jensc\Source\Repos\semantic-kernel\dotnet\src\InternalUtilities\src\Type\TypeExtensions.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="SemanticKernel.Connectors.UnitTests" />

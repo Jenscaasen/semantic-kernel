@@ -2,7 +2,9 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -35,15 +37,23 @@ public static class MistralServiceCollectionExtensions
     /// <returns>The same instance as <paramref name="builder"/>.</returns>
     public static IKernelBuilder AddMistralChatCompletion(
         this IKernelBuilder builder,
-        string apiKey, string modelId,
+        string apiKey,
+        string modelId,
         string? serviceId = null,       
         HttpClient? httpClient = null)
     {
+        Verify.NotNull(builder);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
 
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
-           new(modelId,
-               apiKey);
+        {
 
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider));
+
+        };
+       
         builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
         builder.Services.AddKeyedSingleton<ITextGenerationService>(serviceId, factory);
 
@@ -63,10 +73,18 @@ public static class MistralServiceCollectionExtensions
         string apiKey,
         string? serviceId = null)
     {
-     
+
+        Verify.NotNull(services);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
+
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
-            new(modelId,
-                apiKey);
+        {
+
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient( serviceProvider));
+
+        };
 
         services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
 
@@ -83,14 +101,22 @@ public static class MistralServiceCollectionExtensions
     /// <returns>The same instance as <paramref name="builder"/>.</returns>
     public static IKernelBuilder AddMistralTextCompletion(
         this IKernelBuilder builder,
-        string apiKey, string modelId,
+        string apiKey,
+        string modelId,
         string? serviceId = null,
         HttpClient? httpClient = null)
     {
+        Verify.NotNull(builder);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
 
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
-           new(modelId,
-               apiKey);
+        {
+
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider));
+
+        };
 
         builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
         builder.Services.AddKeyedSingleton<ITextGenerationService>(serviceId, factory);
@@ -112,9 +138,16 @@ public static class MistralServiceCollectionExtensions
         string? serviceId = null)
     {
 
+        Verify.NotNull(services);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
+
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
-            new(modelId,
-                apiKey);
+        {
+
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient(serviceProvider));
+        };
 
         services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
 
@@ -141,13 +174,16 @@ public static class MistralServiceCollectionExtensions
         string? serviceId = null,
         HttpClient? httpClient = null)
     {
+        Verify.NotNull(builder);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
 
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         builder.Services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
             new MistralTextEmbeddingGenerationService(
                 modelId,
                 apiKey,
-                httpClient,
+               HttpClientProvider.GetHttpClient(httpClient, serviceProvider),
                 serviceProvider.GetService<ILoggerFactory>()));
 #pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
@@ -170,13 +206,15 @@ public static class MistralServiceCollectionExtensions
         string? serviceId = null,
         HttpClient? httpClient = null)
     {
-
+        Verify.NotNull(services);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         return services.AddKeyedSingleton<ITextEmbeddingGenerationService>(serviceId, (serviceProvider, _) =>
             new MistralTextEmbeddingGenerationService(
                 modelId,
                 apiKey,
-                httpClient: httpClient,
+                 HttpClientProvider.GetHttpClient(httpClient, serviceProvider),
                 serviceProvider.GetService<ILoggerFactory>()));
 #pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     }

@@ -30,6 +30,9 @@ public sealed class MistralAITextAndChatCompletionService : IChatCompletionServi
         string apiKey,
          HttpClient httpClient = null)
     {
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
+
         this._core = new MistralClientCore(modelId, apiKey, httpClient);
 
         this._core.AddAttribute(AIServiceExtensions.ModelIdKey, modelId);
