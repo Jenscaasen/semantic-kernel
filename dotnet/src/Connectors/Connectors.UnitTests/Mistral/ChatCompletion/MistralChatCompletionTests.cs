@@ -34,7 +34,7 @@ public sealed class MistralChatCompletionTests : IDisposable
     public async Task ItGetChatMessageContentsShouldHaveModelIdDefinedAsync()
     {
         // Arrange
-        var chatCompletion = new MistralAIChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
+        var chatCompletion = new MistralAITextAndChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
         this._messageHandlerStub.ResponseToReturn = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
         { Content = new StringContent(MistralChatCompletionResponse, Encoding.UTF8, "application/json") };
 
@@ -53,7 +53,7 @@ public sealed class MistralChatCompletionTests : IDisposable
     public async Task ItGetTextContentsShouldHaveModelIdDefinedAsync()
     {
         // Arrange
-        var chatCompletion = new MistralAIChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
+        var chatCompletion = new MistralAITextAndChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
         this._messageHandlerStub.ResponseToReturn = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
         { Content = new StringContent(MistralChatCompletionResponse, Encoding.UTF8, "application/json") };
 

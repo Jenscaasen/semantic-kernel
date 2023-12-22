@@ -40,7 +40,7 @@ public static class MistralServiceCollectionExtensions
         HttpClient? httpClient = null)
     {
 
-        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
+        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
            new(modelId,
                apiKey);
 
@@ -64,7 +64,7 @@ public static class MistralServiceCollectionExtensions
         string? serviceId = null)
     {
      
-        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
+        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
             new(modelId,
                 apiKey);
 
@@ -72,7 +72,54 @@ public static class MistralServiceCollectionExtensions
 
         return services;
     }
+    /// <summary>
+    /// Adds the Mistral text completion service to the list.
+    /// </summary>
+    /// <param name="builder">The <see cref="IKernelBuilder"/> instance to augment.</param>
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <param name="modelId">Model identifier</param>
+    /// <param name="httpClient">The HttpClient to use with this service.</param>
+    /// <returns>The same instance as <paramref name="builder"/>.</returns>
+    public static IKernelBuilder AddMistralTextCompletion(
+        this IKernelBuilder builder,
+        string apiKey, string modelId,
+        string? serviceId = null,
+        HttpClient? httpClient = null)
+    {
 
+        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
+           new(modelId,
+               apiKey);
+
+        builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
+        builder.Services.AddKeyedSingleton<ITextGenerationService>(serviceId, factory);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds the Mistral chat completion service to the list.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
+    /// <param name="modelId">Mistral model name</param>
+    /// <param name="apiKey">Mistral API key</param>   
+    /// <returns>The same instance as <paramref name="services"/>.</returns>
+    public static IServiceCollection AddMistralTextCompletion(
+        this IServiceCollection services,
+        string modelId,
+        string apiKey,
+        string? serviceId = null)
+    {
+
+        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
+            new(modelId,
+                apiKey);
+
+        services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
+
+        return services;
+    }
     #endregion
 
 }

@@ -4,6 +4,11 @@
     "ModelId": "text-davinci-003",
     "ApiKey": ""
   },
+  "Mistral": {
+    "ServiceId": "mistral-tiny",
+    "ModelId": "mistral-tiny",
+    "ApiKey": ""
+  },
   "AzureOpenAI": {
     "ServiceId": "azure-text-davinci-003",
     "DeploymentName": "text-davinci-003",

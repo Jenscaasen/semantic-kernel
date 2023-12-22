@@ -33,13 +33,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)/dotnet/src/InternalUtilities/test/AssertExtensions.cs"
-             Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)/dotnet/src/InternalUtilities/test/AssertExtensions.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\SemanticKernel.Core\SemanticKernel.Core.csproj" />
     <ProjectReference Include="..\Connectors.HuggingFace\Connectors.HuggingFace.csproj" />
+    <ProjectReference Include="..\Connectors.Mistral\Connectors.Mistral.csproj" />
     <ProjectReference Include="..\Connectors.OpenAI\Connectors.OpenAI.csproj" />
     <ProjectReference Include="..\Connectors.Memory.AzureAISearch\Connectors.Memory.AzureAISearch.csproj" />
     <ProjectReference Include="..\Connectors.Memory.Chroma\Connectors.Memory.Chroma.csproj" />

@@ -15,7 +15,7 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// <summary>
 /// Mistral chat completion service.
 /// </summary>
-public sealed class MistralAIChatCompletionService : IChatCompletionService, ITextGenerationService
+public sealed class MistralAITextAndChatCompletionService : IChatCompletionService, ITextGenerationService
 {
     private readonly ClientCore _core;
 
@@ -25,7 +25,7 @@ public sealed class MistralAIChatCompletionService : IChatCompletionService, ITe
     /// <param name="modelId">Model name</param>
     /// <param name="apiKey">Mistral API Key</param>
     /// <param name="httpClient">Custom <see cref="HttpClient"/> for HTTP requests.</param>
-    public MistralAIChatCompletionService(
+    public MistralAITextAndChatCompletionService(
         string modelId,
         string apiKey,
          HttpClient httpClient = null)
