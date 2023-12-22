@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.AzureSdk;
 
-public class MistralAiApiRequest
+public class MistralAiChatEndpointRequest
 {
     public string model { get; set; }
     public Message[] messages { get; set; }

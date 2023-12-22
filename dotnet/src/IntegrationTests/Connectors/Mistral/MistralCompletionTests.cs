@@ -44,7 +44,7 @@ public sealed class MistralCompletionTests : IDisposable
         this._kernelBuilder = Kernel.CreateBuilder();
     }
 
-    [Theory(Skip = "Mistral will often throttle requests. This test is for manual verification.")]
+    [Theory]
     [InlineData("Where is the most famous fish market in Seattle, Washington, USA?", "Pike Place Market")]
     public async Task MistralTestAsync(string prompt, string expectedAnswerContains)
     {
@@ -69,7 +69,7 @@ public sealed class MistralCompletionTests : IDisposable
         Assert.Contains(expectedAnswerContains, actual.GetValue<string>(), StringComparison.OrdinalIgnoreCase);
     }
 
-    [Theory(Skip = "Mistral will often throttle requests. This test is for manual verification.")]
+    [Theory]
     [InlineData("Where is the most famous fish market in Seattle, Washington, USA?", "Pike Place Market")]
     public async Task MistralChatAsTextTestAsync(string prompt, string expectedAnswerContains)
     {
