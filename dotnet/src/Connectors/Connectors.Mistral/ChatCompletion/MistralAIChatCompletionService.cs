@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.Mistral;
 using Microsoft.SemanticKernel.Services;
 using Microsoft.SemanticKernel.TextGeneration;
 
@@ -28,7 +26,7 @@ public sealed class MistralAITextAndChatCompletionService : IChatCompletionServi
     public MistralAITextAndChatCompletionService(
         string modelId,
         string apiKey,
-         HttpClient httpClient = null)
+         HttpClient? httpClient = null)
     {
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);

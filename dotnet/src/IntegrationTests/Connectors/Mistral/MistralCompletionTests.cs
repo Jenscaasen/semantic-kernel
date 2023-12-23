@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -12,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.Mistral;
 using SemanticKernel.IntegrationTests.TestSettings;
 using Xunit;
 using Xunit.Abstractions;
@@ -109,7 +106,6 @@ public sealed class MistralCompletionTests : IDisposable
         Assert.Contains("Saturn", result.GetValue<string>(), StringComparison.InvariantCultureIgnoreCase);
         Assert.Contains("Uranus", result.GetValue<string>(), StringComparison.InvariantCultureIgnoreCase);
     }
-
 
     // If the test fails, please note that SK retry logic may not be fully integrated into the underlying code using Azure SDK
     [Theory]
@@ -269,7 +265,6 @@ public sealed class MistralCompletionTests : IDisposable
     private readonly XunitLogger<Kernel> _logger;
     private readonly RedirectOutput _testOutputHelper;
 
-
     public void Dispose()
     {
         this.Dispose(true);
@@ -326,7 +321,6 @@ public sealed class MistralCompletionTests : IDisposable
         Assert.NotNull(mistralConfiguration.ServiceId);
 
         kernelBuilder.AddMistralChatCompletion(
-         
             modelId: mistralConfiguration.ModelId,
             apiKey: mistralConfiguration.ApiKey,
             serviceId: mistralConfiguration.ServiceId);

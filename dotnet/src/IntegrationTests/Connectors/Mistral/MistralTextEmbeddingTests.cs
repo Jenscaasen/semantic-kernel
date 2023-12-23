@@ -50,7 +50,6 @@ public sealed class MistralTextEmbeddingTests : IDisposable
         Assert.Equal(3, batchResult.Count);
     }
 
-
     #region internals
 
     private readonly RedirectOutput _testOutputHelper;

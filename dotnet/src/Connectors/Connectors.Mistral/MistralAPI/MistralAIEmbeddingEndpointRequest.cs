@@ -1,16 +1,36 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Text.Json.Serialization;
+using Microsoft.SemanticKernel.Text;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 
+/// <summary>
+/// Represents the request body for Mistral API Embedding Endpoint.
+/// </summary>
+public class MistralAIEmbeddingEndpointRequest
+{
+    /// <summary>
+    /// Gets or sets the model used for the request.
+    /// </summary>
+    [JsonPropertyName("model")]
+    public string Model { get; set; }
 
-    public class MistralAIEmbeddingEndpointRequest
+    /// <summary>
+    /// Gets or sets the input for the request.
+    /// </summary>
+    [JsonConverter(typeof(ReadOnlyMemoryConverter))]
+    public ReadOnlyMemory<string> Input { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MistralAIEmbeddingEndpointRequest"/> class.
+    /// </summary>
+    /// <param name="model">The model used for the request.</param>
+    /// <param name="input">The input for the request.</param>
+    public MistralAIEmbeddingEndpointRequest(string model, ReadOnlyMemory<string> input)
     {
-        public string model { get; set; }
-        public string[] input { get; set; }
+        this.Model = model;
+        this.Input = input;
     }
-
-
+}

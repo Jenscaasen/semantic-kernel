@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -15,7 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.Mistral.AzureSdk;
+using Microsoft.SemanticKernel.Connectors.Mistral.API;
 using Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 using Microsoft.SemanticKernel.Http;
 
@@ -28,14 +26,12 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// </summary>
 internal class MistralClientCore
 {
-    private const int MaxResultsPerPrompt = 128;
-
-    internal MistralClientCore(string modelName, string apiKey, HttpClient httpCient = null)
+    internal MistralClientCore(string modelName, string apiKey, HttpClient? httpClient = null, ILogger? logger = null)
     {
-        _apiKey = apiKey;
-        this._httpCient = httpCient;
-        DeploymentOrModelName = modelName;
-        
+        this._apiKey = apiKey;
+        this._httpClient = HttpClientProvider.GetHttpClient(httpClient);
+        this.DeploymentOrModelName = modelName;
+        this.Logger = logger ?? NullLogger.Instance;
     }
 
     /// <summary>
@@ -48,8 +44,8 @@ internal class MistralClientCore
     /// </summary>
     internal ILogger Logger { get; set; }
 
-    private string _apiKey;
-    private HttpClient _httpCient;
+    private readonly string _apiKey;
+    private readonly HttpClient _httpClient;
 
     /// <summary>
     /// Storage for AI service attributes.
@@ -70,20 +66,19 @@ internal class MistralClientCore
         Kernel? kernel,
         CancellationToken cancellationToken = default)
     {
-        ChatHistory history = new ChatHistory();
+        ChatHistory history = new();
         history.AddUserMessage(text);
-        var chatResult = await GetChatMessageContentsAsync(history, executionSettings, kernel, cancellationToken).ConfigureAwait(false);
+        var chatResult = await this.GetChatMessageContentsAsync(history, executionSettings, kernel, cancellationToken).ConfigureAwait(false);
         return chatResult.Select(choice => new TextContent(choice.Content, this.DeploymentOrModelName, choice, Encoding.UTF8, choice.Metadata)).ToList();
-
     }
 
-    internal  IAsyncEnumerable<StreamingTextContent> GetStreamingTextContentsAsync(
+    internal IAsyncEnumerable<StreamingTextContent> GetStreamingTextContentsAsync(
         string prompt,
         PromptExecutionSettings? executionSettings,
         Kernel? kernel,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+         CancellationToken cancellationToken = default)
     {
-        throw new Exception("Not supported by API");
+        throw new NotImplementedException("Not supported by API");
     }
 
     /// <summary>
@@ -100,13 +95,12 @@ internal class MistralClientCore
         Kernel? kernel,
         CancellationToken cancellationToken = default)
     {
-       
         // Make the request.
-        var responseData = await CallMistralChatEndpointAsync(chat).ConfigureAwait(false);
+        var responseData = await this.CallMistralChatEndpointAsync(chat).ConfigureAwait(false);
 
-        ChatMessageContent content = new ChatMessageContent(AuthorRole.Assistant, responseData.choices[0].message.content);
+        ChatMessageContent content = new(AuthorRole.Assistant, responseData.choices[0].message.content);
 
-        IReadOnlyDictionary<string, object> metadata = new Dictionary<string, object>()
+        IReadOnlyDictionary<string, object?> metadata = new Dictionary<string, object?>()
         {
             {"Usage", responseData.usage }
         };
@@ -120,53 +114,74 @@ internal class MistralClientCore
 
     private async Task<MistralAIChatEndpointResponse> CallMistralChatEndpointAsync(ChatHistory chat)
     {
-      
-        List<Message> messages = new List<Message>();
-        foreach(var msg in chat)
+        List<Message> messages = new();
+        foreach (var msg in chat)
         {
             string role = "assistant";
-            if (msg.Role == AuthorRole.User) role = "user";
-            if (msg.Role == AuthorRole.System) role = "system";
-            messages.Add(new Message { role = role, content = msg.Content });
+            if (msg.Role == AuthorRole.User)
+            {
+                role = "user";
+            }
+
+            if (msg.Role == AuthorRole.System)
+            {
+                role = "system";
+            }
+
+            messages.Add(new Message(role, msg.Content));
         }
 
-        //hack: the API does not like system-only requests
-        if(messages.Last().role != "user") messages.Last().role = "user";
+        //hack: the API does not like system-only requests, but the InvokePrompt does that by default
+        if (messages.Last().role != "user")
+        {
+            var lastMsg = messages.Last();
+            var fixedLastMsg = new Message("user", lastMsg.content);
+            messages.Remove(lastMsg);
+            messages.Add(fixedLastMsg);
+        }
 
-        MistralAiChatEndpointRequest request = new MistralAiChatEndpointRequest {
-            model = DeploymentOrModelName,
-            safe_mode = true,
-            messages = messages.ToArray()
-        };
-        var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        MistralAiChatEndpointRequest request = new(
+            model: this.DeploymentOrModelName,
+            safeMode: true,
+            messages: messages.ToArray()
+        );
+        using (var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"))
+        {
+            string url = "https://api.mistral.ai/v1/chat/completions";
+            string? responseContent = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
 
-        string url = "https://api.mistral.ai/v1/chat/completions";       
-        var responseContent = await CallMistralAuthedAsync(url, content).ConfigureAwait(false);
-        
-        MistralAIChatEndpointResponse result = JsonSerializer.Deserialize< MistralAIChatEndpointResponse>(responseContent);
-        return result;
+            if (string.IsNullOrEmpty(responseContent))
+            {
+                throw new InvalidOperationException("Invalid response received from Mistral API server");
+            }
+
+            var result = JsonSerializer.Deserialize<MistralAIChatEndpointResponse>(responseContent);
+            return result!;
+        }
     }
     private async Task<MistralAIEmbeddingEndpointResponse> CallMistralEmbeddingsEndpointAsync(string[] inputs)
     {
-        MistralAIEmbeddingEndpointRequest embeddingRequest = new() { model = DeploymentOrModelName,  input = inputs }; 
+        MistralAIEmbeddingEndpointRequest embeddingRequest = new(this.DeploymentOrModelName, inputs);
 
-        var content = new StringContent(JsonSerializer.Serialize(embeddingRequest), Encoding.UTF8, "application/json");
+        using (var content = new StringContent(JsonSerializer.Serialize(embeddingRequest), Encoding.UTF8, "application/json"))
+        {
+            string url = "https://api.mistral.ai/v1/embeddings";
+            var responseContent = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
 
-        string url = "https://api.mistral.ai/v1/embeddings";
-        var responseContent = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
-    
-        MistralAIEmbeddingEndpointResponse result = JsonSerializer.Deserialize<MistralAIEmbeddingEndpointResponse>(responseContent);
-        return result;
+            if (string.IsNullOrEmpty(responseContent))
+            {
+                throw new InvalidOperationException("Invalid response received from Mistral API server");
+            }
+
+            var result = JsonSerializer.Deserialize<MistralAIEmbeddingEndpointResponse>(responseContent);
+            return result!;
+        }
     }
     private async Task<string> CallMistralAuthedAsync(string url, StringContent content)
     {
-        if (_httpCient == null)
-        {
-            _httpCient = new HttpClient();
-        }
-        _httpCient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+        this._httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", this._apiKey);
 
-        var response = await _httpCient.PostAsync(url, content).ConfigureAwait(false);
+        var response = await this._httpClient.PostAsync(url, content).ConfigureAwait(false);
         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
@@ -175,22 +190,22 @@ internal class MistralClientCore
 
         return responseContent;
     }
-    internal  IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(
+    internal IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(
         ChatHistory chat,
         PromptExecutionSettings? executionSettings,
         Kernel? kernel,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
-        throw new Exception("Not supported by API");
+        throw new NotImplementedException("Not supported by API");
     }
 
-    internal  IAsyncEnumerable<StreamingTextContent> GetChatAsTextStreamingContentsAsync(
+    internal IAsyncEnumerable<StreamingTextContent> GetChatAsTextStreamingContentsAsync(
         string prompt,
         PromptExecutionSettings? executionSettings,
         Kernel? kernel,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
-        throw new Exception("Not supported by API");
+        throw new NotImplementedException("Not supported by API");
     }
 
     internal async Task<IReadOnlyList<TextContent>> GetChatAsTextContentsAsync(
@@ -199,8 +214,7 @@ internal class MistralClientCore
         Kernel? kernel,
         CancellationToken cancellationToken = default)
     {
-
-        ChatHistory chat = new ChatHistory();
+        ChatHistory chat = new();
         chat.AddUserMessage(text);
         return (await this.GetChatMessageContentsAsync(chat, executionSettings, kernel, cancellationToken).ConfigureAwait(false))
             .Select(chat => new TextContent(chat.Content, chat.ModelId, chat.Content, Encoding.UTF8, chat.Metadata))
@@ -217,7 +231,7 @@ internal class MistralClientCore
 
     internal void LogActionDetails([CallerMemberName] string? callerMemberName = default)
     {
-        if (this.Logger !=null && this.Logger.IsEnabled(LogLevel.Information))
+        if (this.Logger != null && this.Logger.IsEnabled(LogLevel.Information))
         {
             this.Logger.LogInformation("Action: {Action}. Mistral Model ID: {ModelId}.", callerMemberName, this.DeploymentOrModelName);
         }
@@ -227,13 +241,12 @@ internal class MistralClientCore
     {
         MistralAIEmbeddingEndpointResponse embeddingResponse = await this.CallMistralEmbeddingsEndpointAsync(dataIn.ToArray()).ConfigureAwait(false);
         var result = new List<ReadOnlyMemory<float>>(dataIn.Count);
-       
-        foreach (var data in embeddingResponse.data)
+
+        foreach (var data in embeddingResponse.Data.ToArray())
         {
-            result.Add(data.embedding);
+            result.Add(data.Embedding);
         }
 
         return result;
     }
 }
-

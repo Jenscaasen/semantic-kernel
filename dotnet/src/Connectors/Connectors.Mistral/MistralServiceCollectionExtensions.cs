@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -12,7 +9,6 @@ using Microsoft.SemanticKernel.Connectors.Mistral;
 using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.Http;
 using Microsoft.SemanticKernel.TextGeneration;
-using Microsoft.SemanticKernel.TextToImage;
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
 #pragma warning disable IDE0039 // Use local function
@@ -31,15 +27,15 @@ public static class MistralServiceCollectionExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IKernelBuilder"/> instance to augment.</param>
     /// <param name="apiKey">Azure Mistral API key, see https://learn.microsoft.com/azure/cognitive-services/Mistral/quickstart</param>
-    /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <param name="modelId">Model identifier</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <param name="httpClient">The HttpClient to use with this service.</param>
     /// <returns>The same instance as <paramref name="builder"/>.</returns>
     public static IKernelBuilder AddMistralChatCompletion(
         this IKernelBuilder builder,
         string apiKey,
         string modelId,
-        string? serviceId = null,       
+        string? serviceId = null,
         HttpClient? httpClient = null)
     {
         Verify.NotNull(builder);
@@ -48,12 +44,10 @@ public static class MistralServiceCollectionExtensions
 
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
         {
-
             return new(modelId,
                apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider));
-
         };
-       
+
         builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
         builder.Services.AddKeyedSingleton<ITextGenerationService>(serviceId, factory);
 
@@ -65,7 +59,8 @@ public static class MistralServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
     /// <param name="modelId">Mistral model name</param>
-    /// <param name="apiKey">Mistral API key</param>   
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <returns>The same instance as <paramref name="services"/>.</returns>
     public static IServiceCollection AddMistralChatCompletion(
         this IServiceCollection services,
@@ -73,17 +68,14 @@ public static class MistralServiceCollectionExtensions
         string apiKey,
         string? serviceId = null)
     {
-
         Verify.NotNull(services);
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);
 
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
         {
-
             return new(modelId,
-               apiKey, HttpClientProvider.GetHttpClient( serviceProvider));
-
+               apiKey, HttpClientProvider.GetHttpClient(serviceProvider));
         };
 
         services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
@@ -95,8 +87,8 @@ public static class MistralServiceCollectionExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IKernelBuilder"/> instance to augment.</param>
     /// <param name="apiKey">Mistral API key</param>
-    /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <param name="modelId">Model identifier</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <param name="httpClient">The HttpClient to use with this service.</param>
     /// <returns>The same instance as <paramref name="builder"/>.</returns>
     public static IKernelBuilder AddMistralTextCompletion(
@@ -112,10 +104,8 @@ public static class MistralServiceCollectionExtensions
 
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
         {
-
             return new(modelId,
                apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider));
-
         };
 
         builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
@@ -129,7 +119,8 @@ public static class MistralServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
     /// <param name="modelId">Mistral model name</param>
-    /// <param name="apiKey">Mistral API key</param>   
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <returns>The same instance as <paramref name="services"/>.</returns>
     public static IServiceCollection AddMistralTextCompletion(
         this IServiceCollection services,
@@ -137,14 +128,12 @@ public static class MistralServiceCollectionExtensions
         string apiKey,
         string? serviceId = null)
     {
-
         Verify.NotNull(services);
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);
 
         Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
         {
-
             return new(modelId,
                apiKey, HttpClientProvider.GetHttpClient(serviceProvider));
         };
@@ -166,7 +155,6 @@ public static class MistralServiceCollectionExtensions
     /// <param name="serviceId">A local identifier for the given AI service</param>
     /// <param name="httpClient">The HttpClient to use with this service.</param>
     /// <returns>The same instance as <paramref name="builder"/>.</returns>
-
     public static IKernelBuilder AddMistralTextEmbeddingGeneration(
         this IKernelBuilder builder,
         string modelId,
@@ -197,8 +185,8 @@ public static class MistralServiceCollectionExtensions
     /// <param name="modelId">Mistral model name</param>
     /// <param name="apiKey">Mistral API key</param>
     /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <param name="httpClient">The HttpClient to use</param>
     /// <returns>The same instance as <paramref name="services"/>.</returns>
-  
     public static IServiceCollection AddMistralTextEmbeddingGeneration(
         this IServiceCollection services,
         string modelId,

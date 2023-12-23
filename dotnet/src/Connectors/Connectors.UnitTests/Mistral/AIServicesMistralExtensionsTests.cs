@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.TextGeneration;
 using Xunit;
 
@@ -17,7 +15,7 @@ public class AIServicesMistralExtensionsTests
     public void ItTellsIfAServiceIsAvailable()
     {
         Kernel targetKernel = Kernel.CreateBuilder()
-            .AddMistralChatCompletion("depl", "tiny", serviceId: "mistral")          
+            .AddMistralChatCompletion("depl", "tiny", serviceId: "mistral")
             .Build();
 
         // Assert
@@ -31,8 +29,8 @@ public class AIServicesMistralExtensionsTests
         // Act - Assert no exception occurs
         var builder = Kernel.CreateBuilder();
 
-        builder.Services.AddMistralChatCompletion("depl", "key",serviceId: "one");
-//i dont realy get this testcase, why are we testing the service management, the openai connector already does that
+        builder.Services.AddMistralChatCompletion("depl", "key", serviceId: "one");
+        //i dont realy get this testcase, why are we testing the service management, the openai connector already does that
         builder.Build();
     }
 }

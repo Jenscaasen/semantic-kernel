@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +33,7 @@ public sealed class MistralTextEmbeddingGenerationService : ITextEmbeddingGenera
         HttpClient? httpClient = null,
         ILoggerFactory? loggerFactory = null)
     {
-        this._core = new(modelId, apiKey,  httpClient);
+        this._core = new(modelId, apiKey, httpClient);
 
         this._core.AddAttribute(AIServiceExtensions.ModelIdKey, modelId);
     }
