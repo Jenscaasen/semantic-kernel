@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -87,6 +88,38 @@ public sealed class MistralCompletionTests : IDisposable
         Assert.Contains(expectedAnswerContains, actual.GetValue<string>(), StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData(false, "Where is the most famous fish market in Seattle, Washington, USA?", "Pike Place")]
+    [InlineData(true, "Where is the most famous fish market in Seattle, Washington, USA?", "Pike Place")]
+    public async Task MistralStreamingTestAsync(bool useChatModel, string prompt, string expectedAnswerContains)
+    {
+        // Arrange
+        this._kernelBuilder.Services.AddSingleton<ILoggerFactory>(this._logger);
+        var builder = this._kernelBuilder;
+
+        if (useChatModel)
+        {
+            this.ConfigureMistralChatAsText(builder);
+        }
+        else
+        {
+            this.ConfigureMistralText(builder);
+        }
+
+        Kernel target = builder.Build();
+
+        IReadOnlyKernelPluginCollection plugins = TestHelpers.ImportSamplePlugins(target, "ChatPlugin");
+
+        StringBuilder fullResult = new();
+        // Act
+        await foreach (var content in target.InvokeStreamingAsync<StreamingKernelContent>(plugins["ChatPlugin"]["Chat"], new() { [InputParameterName] = prompt }))
+        {
+            fullResult.Append(content);
+        };
+
+        // Assert
+        Assert.Contains(expectedAnswerContains, fullResult.ToString(), StringComparison.OrdinalIgnoreCase);
+    }
     [Fact(Skip = "Skipping while we investigate issue with GitHub actions.")]
     public async Task CanUseMistralChatForTextGenerationAsync()
     {
