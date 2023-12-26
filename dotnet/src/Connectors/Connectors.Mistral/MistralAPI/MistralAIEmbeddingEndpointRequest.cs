@@ -2,7 +2,6 @@
 
 using System;
 using System.Text.Json.Serialization;
-using Microsoft.SemanticKernel.Text;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 
@@ -20,7 +19,7 @@ public class MistralAIEmbeddingEndpointRequest
     /// <summary>
     /// Gets or sets the input for the request.
     /// </summary>
-    [JsonConverter(typeof(ReadOnlyMemoryConverter))]
+    [JsonPropertyName("input")]
     public ReadOnlyMemory<string> Input { get; set; }
 
     /// <summary>

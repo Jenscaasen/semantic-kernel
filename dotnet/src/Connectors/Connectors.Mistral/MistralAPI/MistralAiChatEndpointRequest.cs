@@ -2,7 +2,6 @@
 
 using System;
 using System.Text.Json.Serialization;
-using Microsoft.SemanticKernel.Text;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.API;
 
@@ -16,14 +15,20 @@ public class MistralAiChatEndpointRequest
     /// </summary>
     /// <param name="model">The model for the chat request.</param>
     /// <param name="messages">The messages for the chat request.</param>
+    /// <param name="stream">Indicates if streaming is used</param>
     /// <param name="safeMode">Indicates if safe mode is enabled.</param>
-    public MistralAiChatEndpointRequest(string model, Message[] messages, bool safeMode)
+    public MistralAiChatEndpointRequest(string model, Message[] messages, bool stream, bool safeMode)
     {
         this.Model = model;
         this.Messages = messages;
+        this.Stream = stream;
         this.SafeMode = safeMode;
     }
-
+    /// <summary>
+    /// Gets or sets if streaming should be enabled
+    /// </summary>
+    [JsonPropertyName("stream")]
+    public bool Stream { get; set; }
     /// <summary>
     /// Gets or sets the model for the chat request.
     /// </summary>
@@ -33,7 +38,7 @@ public class MistralAiChatEndpointRequest
     /// <summary>
     /// Gets or sets the messages for the chat request.
     /// </summary>
-    [JsonConverter(typeof(ReadOnlyMemoryConverter))]
+    [JsonPropertyName("messages")]
     public ReadOnlyMemory<Message> Messages { get; set; }
 
     /// <summary>

@@ -17,7 +17,6 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.Mistral.API;
 using Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 using Microsoft.SemanticKernel.Http;
-using static System.Net.Mime.MediaTypeNames;
 
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
 
@@ -218,7 +217,7 @@ internal class MistralClientCore
        string prompt,
        PromptExecutionSettings? executionSettings,
        Kernel? kernel,
-       CancellationToken cancellationToken = default)
+    [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         ChatHistory history = new();
         history.AddUserMessage(prompt);
@@ -278,8 +277,6 @@ internal class MistralClientCore
             { nameof(choice.delta.role), choice.delta.role }
         };
     }
-
-   
 
     internal async Task<IReadOnlyList<TextContent>> GetChatAsTextContentsAsync(
         string text,

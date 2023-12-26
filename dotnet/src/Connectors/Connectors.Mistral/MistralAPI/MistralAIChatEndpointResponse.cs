@@ -17,6 +17,7 @@ internal sealed class MistralAIChatEndpointResponse
     /// <summary>
     /// Gets the object type of the response.
     /// </summary>
+    [JsonPropertyName("object")]
     public string _object { get; set; }
 
     /// <summary>
