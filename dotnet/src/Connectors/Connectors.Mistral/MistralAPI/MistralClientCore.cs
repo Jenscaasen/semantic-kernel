@@ -23,7 +23,7 @@ using Microsoft.SemanticKernel.Http;
 namespace Microsoft.SemanticKernel.Connectors.Mistral;
 
 /// <summary>
-/// Base class for AI clients that provides common functionality for interacting with OpenAI services.
+/// Base class for AI clients that provides common functionality for interacting with Mistral services.
 /// </summary>
 internal class MistralClientCore
 {
@@ -96,8 +96,10 @@ internal class MistralClientCore
         Kernel? kernel,
         CancellationToken cancellationToken = default)
     {
+        MistralPromptExecutionSettings textExecutionSettings = MistralPromptExecutionSettings.FromExecutionSettings(executionSettings, MistralPromptExecutionSettings.DefaultTextMaxTokens);
+
         // Make the request.
-        var responseData = await this.CallMistralChatEndpointAsync(chat).ConfigureAwait(false);
+        var responseData = await this.CallMistralChatEndpointAsync(chat, textExecutionSettings).ConfigureAwait(false);
 
         ChatMessageContent content = new(AuthorRole.Assistant, responseData.choices[0].message.content);
 
@@ -113,16 +115,18 @@ internal class MistralClientCore
          )).ToList();
     }
 
-    private async Task<MistralAIChatEndpointResponse> CallMistralChatEndpointAsync(ChatHistory chat)
+    private async Task<MistralAIChatEndpointResponse> CallMistralChatEndpointAsync(ChatHistory chat, MistralPromptExecutionSettings textExecutionSettings)
     {
         List<Message> messages = PrepareChatMessages(chat);
 
-        MistralAiChatEndpointRequest request = new(
-            model: this.DeploymentOrModelName,
-            safeMode: true,
-            stream: false,
-            messages: messages.ToArray()
-        );
+        MistralAiChatEndpointRequest request = new()
+        {
+            Model = this.DeploymentOrModelName,
+            Stream = false,
+            Messages = messages.ToArray()
+        };
+        request.ApplySettings(textExecutionSettings);
+
         string requestJson = JsonSerializer.Serialize(request);
         using (var content = new StringContent(requestJson, Encoding.UTF8, "application/json"))
         {
@@ -181,16 +185,17 @@ internal class MistralClientCore
             return result!;
         }
     }
-    private async Task<HttpResponseMessage> CallMistralStreamingEndpointAsync(ChatHistory chat)
+    private async Task<HttpResponseMessage> CallMistralStreamingEndpointAsync(ChatHistory chat, MistralPromptExecutionSettings textExecutionSettings)
     {
         List<Message> messages = PrepareChatMessages(chat);
 
-        MistralAiChatEndpointRequest request = new(
-            model: this.DeploymentOrModelName,
-            safeMode: true,
-            stream: true,
-            messages: messages.ToArray()
-        );
+        MistralAiChatEndpointRequest request = new()
+        {
+            Model = this.DeploymentOrModelName,
+            Stream = true,
+            Messages = messages.ToArray()
+        };
+        request.ApplySettings(textExecutionSettings);
         string requestJson = JsonSerializer.Serialize(request);
         using (var content = new StringContent(requestJson, Encoding.UTF8, "application/json"))
         {
@@ -234,9 +239,11 @@ internal class MistralClientCore
         Kernel? kernel,
        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        MistralPromptExecutionSettings textExecutionSettings = MistralPromptExecutionSettings.FromExecutionSettings(executionSettings, MistralPromptExecutionSettings.DefaultTextMaxTokens);
+
         StringBuilder contentBuilder = new();
         // Make the request.
-        HttpResponseMessage streamingResponse = await this.CallMistralStreamingEndpointAsync(chat).ConfigureAwait(false);
+        HttpResponseMessage streamingResponse = await this.CallMistralStreamingEndpointAsync(chat, textExecutionSettings).ConfigureAwait(false);
         Stream responseStream = await streamingResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
         using var reader = new StreamReader(responseStream);
