@@ -23,7 +23,6 @@ public sealed class MistralChatCompletionTests : IDisposable
     {
         this._messageHandlerStub = new HttpMessageHandlerStub();
         this._httpClient = new HttpClient(this._messageHandlerStub, false);
-
     }
 
     [Fact]

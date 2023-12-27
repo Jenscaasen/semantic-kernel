@@ -10,6 +10,7 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 /// <summary>
 /// Execution settings for an Mistral completion request.
 /// </summary>
+[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
 public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
 {
     /// <summary>
@@ -54,7 +55,7 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
     /// </summary>
     /// <param name="executionSettings">Template configuration</param>
     /// <param name="defaultMaxTokens">Default max tokens</param>
-    /// <returns>An instance of OpenAIPromptExecutionSettings</returns>
+    /// <returns>An instance of MistralPromptExecutionSettings</returns>
     public static MistralPromptExecutionSettings FromExecutionSettings(PromptExecutionSettings? executionSettings, int? defaultMaxTokens = null)
     {
         if (executionSettings is null)
@@ -72,10 +73,10 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
 
         var json = JsonSerializer.Serialize(executionSettings);
 
-        var openAIExecutionSettings = JsonSerializer.Deserialize<MistralPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive);
-        if (openAIExecutionSettings is not null)
+        var mistralExecutionSettings = JsonSerializer.Deserialize<MistralPromptExecutionSettings>(json, JsonOptionsCache.ReadPermissive);
+        if (mistralExecutionSettings is not null)
         {
-            return openAIExecutionSettings;
+            return mistralExecutionSettings;
         }
 
         throw new ArgumentException($"Invalid execution settings, cannot convert to {nameof(MistralPromptExecutionSettings)}", nameof(executionSettings));
