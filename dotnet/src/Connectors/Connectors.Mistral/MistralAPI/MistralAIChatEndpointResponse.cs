@@ -1,12 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.API;
 /// <summary>
 /// Represents the response body from Mistral API Chat Endpoint.
 /// </summary>
+[SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Class is instantiated via JSON Deserialization")]
 internal sealed class MistralAIChatEndpointResponse
 {
     /// <summary>

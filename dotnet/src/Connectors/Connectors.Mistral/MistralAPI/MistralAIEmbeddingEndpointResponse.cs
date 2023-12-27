@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
@@ -8,6 +9,7 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 /// <summary>
 /// Represents the response body for Mistral API Embedding Endpoint.
 /// </summary>
+[SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Class is instantiated via JSON Deserialization")]
 internal sealed class MistralAIEmbeddingEndpointResponse
 {
     /// <summary>
@@ -43,6 +45,7 @@ internal sealed class MistralAIEmbeddingEndpointResponse
 /// <summary>
 /// Represents the response body Usage for Mistral API Embedding Endpoint.
 /// </summary>
+[SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Class is instantiated via JSON Deserialization")]
 internal sealed class Usage
 {
     /// <summary>
@@ -66,6 +69,7 @@ internal sealed class Usage
 /// <summary>
 /// Represents the response body single Embedding Result for Mistral API Embedding Endpoint.
 /// </summary>
+[SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Class is instantiated via JSON Deserialization")]
 internal sealed class Datum
 {
     /// <summary>

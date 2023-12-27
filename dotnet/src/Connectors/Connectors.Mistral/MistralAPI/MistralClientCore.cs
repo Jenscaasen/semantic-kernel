@@ -25,7 +25,7 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// <summary>
 /// Base class for AI clients that provides common functionality for interacting with Mistral services.
 /// </summary>
-internal class MistralClientCore
+internal sealed class MistralClientCore
 {
     internal MistralClientCore(string modelName, string apiKey, HttpClient? httpClient = null, ILogger? logger = null)
     {

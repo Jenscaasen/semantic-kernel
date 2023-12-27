@@ -12,7 +12,7 @@ using Xunit;
 namespace SemanticKernel.Connectors.UnitTests.Mistral.ChatCompletion;
 
 /// <summary>
-/// Unit tests for <see cref="MistralChatCompletionService"/>
+/// Unit tests for <see cref="MistralAIChatCompletionService"/>
 /// </summary>
 public sealed class MistralChatCompletionTests : IDisposable
 {
@@ -29,7 +29,7 @@ public sealed class MistralChatCompletionTests : IDisposable
     public async Task ItGetChatMessageContentsShouldHaveModelIdDefinedAsync()
     {
         // Arrange
-        var chatCompletion = new MistralAITextAndChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
+        var chatCompletion = new MistralAIChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
         this._messageHandlerStub.ResponseToReturn = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
         { Content = new StringContent(MistralChatCompletionResponse, Encoding.UTF8, "application/json") };
 
@@ -48,7 +48,7 @@ public sealed class MistralChatCompletionTests : IDisposable
     public async Task ItGetTextContentsShouldHaveModelIdDefinedAsync()
     {
         // Arrange
-        var chatCompletion = new MistralAITextAndChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
+        var chatCompletion = new MistralAIChatCompletionService(modelId: "mistral-tiny", apiKey: "NOKEY", httpClient: this._httpClient);
         this._messageHandlerStub.ResponseToReturn = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
         { Content = new StringContent(MistralChatCompletionResponse, Encoding.UTF8, "application/json") };
 

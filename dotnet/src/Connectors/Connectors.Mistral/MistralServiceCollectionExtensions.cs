@@ -42,7 +42,7 @@ public static class MistralServiceCollectionExtensions
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);
 
-        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
         {
             return new(modelId,
                apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider));
@@ -72,7 +72,7 @@ public static class MistralServiceCollectionExtensions
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);
 
-        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
         {
             return new(modelId,
                apiKey, HttpClientProvider.GetHttpClient(serviceProvider));
@@ -102,7 +102,7 @@ public static class MistralServiceCollectionExtensions
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);
 
-        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
         {
             return new(modelId,
                apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider));
@@ -132,7 +132,7 @@ public static class MistralServiceCollectionExtensions
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);
 
-        Func<IServiceProvider, object?, MistralAITextAndChatCompletionService> factory = (serviceProvider, _) =>
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
         {
             return new(modelId,
                apiKey, HttpClientProvider.GetHttpClient(serviceProvider));
