@@ -19,11 +19,6 @@
     <Description>Semantic Kernel connectors for Mistral. Contains clients for text generation, chat completion.</Description>
   </PropertyGroup>
 
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="SemanticKernel.Connectors.UnitTests" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\SemanticKernel.Core\SemanticKernel.Core.csproj" />
   </ItemGroup>
