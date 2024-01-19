@@ -30,10 +30,10 @@ public class MistralAiChatEndpointRequest
     public ReadOnlyMemory<Message> Messages { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether safe mode is enabled.
+    /// Gets or sets a value indicating whether safe prompt is enabled.
     /// </summary>
-    [JsonPropertyName("safe_mode")]
-    public bool SafeMode { get; set; }
+    [JsonPropertyName("safe_prompt")]
+    public bool SafePrompt { get; set; }
     /// <summary>
     /// Temperature controls the randomness of the completion.
     /// The higher the temperature, the more random the completion.
@@ -62,10 +62,10 @@ public class MistralAiChatEndpointRequest
     public long? Seed { get; set; }
     internal void ApplySettings(MistralPromptExecutionSettings textExecutionSettings)
     {
-        this.SafeMode = textExecutionSettings.SafeMode;
+        this.SafePrompt = textExecutionSettings.SafeMode;
         this.Temperature = this.Clamp(textExecutionSettings.Temperature, 0.1, 1);
         this.TopP = this.Clamp(textExecutionSettings.TopP, 0.1, 1);
-        this.SafeMode = textExecutionSettings.SafeMode;
+        this.SafePrompt = textExecutionSettings.SafeMode;
         this.Seed = textExecutionSettings.Seed;
         this.MaxTokens = textExecutionSettings.MaxTokens ?? MistralPromptExecutionSettings.DefaultTextMaxTokens; //otherwise the endpoint crashes at the moment
     }
