@@ -16,11 +16,25 @@
   <PropertyGroup>
     <!-- NuGet Package Settings -->
     <Title>Semantic Kernel - Mistral connector</Title>
-    <Description>Semantic Kernel connectors for Mistral. Contains clients for text generation, chat completion.</Description>
+    <Description>Semantic Kernel connectors for Mistral. Contains clients for text generation, chat completion. ##IMPORTANT## This nuget will be maintained only until the connector is integrated into Semantic Kernel directly</Description>
+    <PackageId>JC.SemanticKernel.Connectors.Mistral</PackageId>
+    <Authors>Jens Caasen</Authors>
+    <Company>Jens Caasen</Company>
+    <Copyright>© Jens Caasen</Copyright>
+    <PackageIcon>.\mistralicon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/Jenscaasen/semantic-kernel/tree/mistral/dotnet/src/Connectors/Connectors.Mistral</RepositoryUrl>
+    <PackageTags>AI, Artificial Intelligence, SDK, MistralAI, Mistral, Semantic Kernel</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SemanticKernel.Core\SemanticKernel.Core.csproj" />
+    <None Include="..\..\..\..\..\..\..\Documents\mistralicon.png">
+      <Pack>True</Pack>
+      <PackagePath>.</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SemanticKernel.Core" />
   </ItemGroup>
 
 </Project>

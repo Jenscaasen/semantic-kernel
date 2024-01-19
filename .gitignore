@@ -491,3 +491,7 @@ swa-cli.config.json
 # python devcontainer
 /python/.devcontainer/*
 /dotnet/samples/KernelSyntaxExamples/Example63_FlowOrchestrator.cs
+/dotnet/src/IntegrationTests/testsettings.json
+/.gitignore
+/dotnet/src/IntegrationTests/testsettings.json
+/.gitignore
