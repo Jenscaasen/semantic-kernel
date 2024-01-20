@@ -49,7 +49,7 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
     /// <summary>
     /// Default max tokens for a text generation
     /// </summary>
-    internal static int DefaultTextMaxTokens { get; } = 256;
+    internal static int DefaultTextMaxTokens { get; } = 4192;
     /// <summary>
     /// Create a new settings object with the values from another settings object.
     /// </summary>
