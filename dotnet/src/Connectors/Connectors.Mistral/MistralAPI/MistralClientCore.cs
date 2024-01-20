@@ -157,7 +157,15 @@ internal sealed class MistralClientCore
 
             messages.Add(new Message(role, msg.Content));
         }
+        //except for the first message there can not be any other system messages
 
+        for (int i = 1; i < messages.Count; i++)
+        {
+            if (messages[i].role == "system")
+            {
+                messages[i].role = "user";
+            }
+        }
         //hack: the API does not like system-only requests, but the InvokePrompt does that by default
         if (messages.Last().role != "user")
         {
