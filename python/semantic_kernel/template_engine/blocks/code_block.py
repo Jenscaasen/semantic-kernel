@@ -5,9 +5,9 @@ from typing import Any, List, Optional, Tuple
 
 import pydantic as pdt
 
-from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
-from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-    ReadOnlySkillCollectionBase,
+from semantic_kernel.orchestration.kernel_function_base import KernelFunctionBase
+from semantic_kernel.plugin_definition.read_only_plugin_collection_base import (
+    ReadOnlyPluginCollectionBase,
 )
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
@@ -68,7 +68,7 @@ class CodeBlock(Block):
 
         return True, ""
 
-    async def render_code_async(self, context):
+    async def render_code(self, context):
         if not self._validated:
             is_valid, error = self.is_valid()
             if not is_valid:
@@ -80,15 +80,15 @@ class CodeBlock(Block):
             return self._tokens[0].render(context.variables)
 
         if self._tokens[0].type == BlockTypes.FUNCTION_ID:
-            return await self._render_function_call_async(self._tokens[0], context)
+            return await self._render_function_call(self._tokens[0], context)
 
         raise ValueError(f"Unexpected first token type: {self._tokens[0].type}")
 
-    async def _render_function_call_async(self, f_block: FunctionIdBlock, context):
-        if not context.skills:
-            raise ValueError("Skill collection not set")
+    async def _render_function_call(self, f_block: FunctionIdBlock, context):
+        if not context.plugins:
+            raise ValueError("Plugin collection not set")
 
-        function = self._get_function_from_skill_collection(context.skills, f_block)
+        function = self._get_function_from_plugin_collection(context.plugins, f_block)
 
         if not function:
             error_msg = f"Function `{f_block.content}` not found"
@@ -102,7 +102,7 @@ class CodeBlock(Block):
             input_value = self._tokens[1].render(variables_clone)
             variables_clone.update(input_value)
 
-        result = await function.invoke_async(variables=variables_clone, memory=context.memory)
+        result = await function.invoke(variables=variables_clone, memory=context.memory)
 
         if result.error_occurred:
             error_msg = (
@@ -115,13 +115,13 @@ class CodeBlock(Block):
 
         return result.result
 
-    def _get_function_from_skill_collection(
-        self, skills: ReadOnlySkillCollectionBase, f_block: FunctionIdBlock
-    ) -> Optional[SKFunctionBase]:
-        if not f_block.skill_name and skills.has_function(None, f_block.function_name):
-            return skills.get_function(None, f_block.function_name)
+    def _get_function_from_plugin_collection(
+        self, plugins: ReadOnlyPluginCollectionBase, f_block: FunctionIdBlock
+    ) -> Optional[KernelFunctionBase]:
+        if not f_block.plugin_name and plugins.has_function(None, f_block.function_name):
+            return plugins.get_function(None, f_block.function_name)
 
-        if f_block.skill_name and skills.has_function(f_block.skill_name, f_block.function_name):
-            return skills.get_function(f_block.skill_name, f_block.function_name)
+        if f_block.plugin_name and plugins.has_function(f_block.plugin_name, f_block.function_name):
+            return plugins.get_function(f_block.plugin_name, f_block.function_name)
 
         return None
