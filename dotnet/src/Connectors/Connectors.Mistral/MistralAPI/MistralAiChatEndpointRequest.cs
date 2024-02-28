@@ -62,12 +62,15 @@ public class MistralAiChatEndpointRequest
     public long? Seed { get; set; }
     internal void ApplySettings(MistralPromptExecutionSettings textExecutionSettings)
     {
-        this.SafePrompt = textExecutionSettings.SafeMode;
+        this.SafePrompt = textExecutionSettings.SafePrompt;
         this.Temperature = this.Clamp(textExecutionSettings.Temperature, 0.1, 1);
         this.TopP = this.Clamp(textExecutionSettings.TopP, 0.1, 1);
-        this.SafePrompt = textExecutionSettings.SafeMode;
+        this.SafePrompt = textExecutionSettings.SafePrompt;
         this.Seed = textExecutionSettings.Seed;
         this.MaxTokens = textExecutionSettings.MaxTokens ?? MistralPromptExecutionSettings.DefaultTextMaxTokens; //otherwise the endpoint crashes at the moment
+
+        //TODO: Add Tools from textexecutionsettings
+
     }
 
     private double Clamp(double value, double min, double max)

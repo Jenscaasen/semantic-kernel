@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.Mistral.API;
+using Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
 using Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 using Microsoft.SemanticKernel.Http;
 
@@ -27,6 +29,28 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// </summary>
 internal sealed class MistralClientCore
 {
+
+    /// <summary>
+    /// The maximum number of auto-invokes that can be in-flight at any given time as part of the current
+    /// asynchronous chain of execution.
+    /// </summary>
+    /// <remarks>
+    /// This is a fail-safe mechanism. If someone accidentally manages to set up execution settings in such a way that
+    /// auto-invocation is invoked recursively, and in particular where a prompt function is able to auto-invoke itself,
+    /// we could end up in an infinite loop. This const is a backstop against that happening. We should never come close
+    /// to this limit, but if we do, auto-invoke will be disabled for the current flow in order to prevent runaway execution.
+    /// With the current setup, the way this could possibly happen is if a prompt function is configured with built-in
+    /// execution settings that opt-in to auto-invocation of everything in the kernel, in which case the invocation of that
+    /// prompt function could advertize itself as a candidate for auto-invocation. We don't want to outright block that,
+    /// if that's something a developer has asked to do (e.g. it might be invoked with different arguments than its parent
+    /// was invoked with), but we do want to limit it. This limit is arbitrary and can be tweaked in the future and/or made
+    /// configurable should need arise.
+    /// </remarks>
+    private const int MaxInflightAutoInvokes = 5;
+
+    /// <summary>Tracking <see cref="AsyncLocal{Int32}"/> for <see cref="MaxInflightAutoInvokes"/>.</summary>
+    private static readonly AsyncLocal<int> s_inflightAutoInvokes = new();
+
     internal MistralClientCore(string modelName, string apiKey, HttpClient? httpClient = null, ILogger? logger = null)
     {
         this._apiKey = apiKey;
@@ -97,22 +121,124 @@ internal sealed class MistralClientCore
         CancellationToken cancellationToken = default)
     {
         MistralPromptExecutionSettings textExecutionSettings = MistralPromptExecutionSettings.FromExecutionSettings(executionSettings, MistralPromptExecutionSettings.DefaultTextMaxTokens);
+        bool autoInvoke = kernel is not null && textExecutionSettings.ToolCallBehavior?.MaximumAutoInvokeAttempts > 0 && s_inflightAutoInvokes.Value < MaxInflightAutoInvokes;
 
-        // Make the request.
-        var responseData = await this.CallMistralChatEndpointAsync(chat, textExecutionSettings).ConfigureAwait(false);
+        if (autoInvoke)
+        {
+            this.AddToolCallsToPromptExecutionSettings(textExecutionSettings, kernel);
+        }
 
-        ChatMessageContent content = new(AuthorRole.Assistant, responseData.choices[0].message.content);
+        for (int iteration = 1; ; iteration++)
+        {
+            // Make the request.
+            MistralAIChatEndpointResponse responseData = await this.CallMistralChatEndpointAsync(chat, textExecutionSettings).ConfigureAwait(false);
 
-        IReadOnlyDictionary<string, object?> metadata = new Dictionary<string, object?>()
+       // ChatMessageContent content = new(AuthorRole.Assistant, responseData.choices[0].message.content);
+          
+            IReadOnlyDictionary<string, object?> metadata = new Dictionary<string, object?>()
         {
             {"Usage", responseData.usage }
         };
-        return responseData.choices.Select(chatChoice => new ChatMessageContent(
-           role: AuthorRole.Assistant,
-           content: chatChoice.message.content,
-            modelId: responseData.model,
-            metadata: metadata
-         )).ToList();
+            var defaultResult = responseData.choices.Select(chatChoice => new ChatMessageContent(
+         role: AuthorRole.Assistant,
+         content: chatChoice.message.content,
+          modelId: responseData.model,
+          metadata: metadata
+       )).ToList();
+
+            var toolCalls = responseData.choices[0].tool_calls;
+
+            if (!autoInvoke || toolCalls.Count == 0)
+            {
+                //nothing to call, return as normal result
+                return defaultResult;
+            }
+
+            //Some tool calling going on
+         
+            MistralChatMessageContent assistantResult = new MistralChatMessageContent(AuthorRole.Assistant, responseData);
+            //adding to the history
+            chat.Add(assistantResult);
+
+            // We must send back a response for every tool call, regardless of whether we successfully executed it or not.
+            // If we successfully execute it, we'll add the result. If we don't, we'll add an error.
+         
+            for (int i = 0; i < toolCalls.Count; i++)
+            {
+                ChatCompletionsToolCall toolCall = toolCalls[i];
+                ChatCompletionsToolFunctionCall functionCall = toolCall.function;
+
+                // We currently only know about function tool calls. If it's anything else, we'll respond with an error.
+                if (functionCall is not ChatCompletionsToolFunctionCall functionToolCall)
+                {
+                    chat.AddMessage(AuthorRole.Tool, $"Error: Tool call with ID {toolCall.id} was not a function call, but: '{toolCall.type}'."); //todo: use metadata and better logging
+                    continue;
+                }
+
+                // Parse the function call arguments.
+                MistralFunctionToolCall? openAIFunctionToolCall;
+                try
+                {
+                    openAIFunctionToolCall = new(toolCall);
+                }
+                catch (JsonException)
+                {
+                    chat.AddMessage(AuthorRole.Tool, "Error: Function call arguments were invalid JSON."); //todo: use metadata and better logging
+                    continue;
+                }
+
+                //todo: check if not allowed any function to be called, and if the proposed function is in the list of possible functions to be called
+
+                // Find the function in the kernel and populate the arguments.
+                if (!kernel!.Plugins.TryGetFunctionAndArguments(openAIFunctionToolCall, out KernelFunction? function, out KernelArguments? functionArgs))
+                {
+                    chat.AddMessage(AuthorRole.Tool, $"Error: Requested function '{openAIFunctionToolCall.FullyQualifiedName}' could not be found."); //todo: use metadata and better logging
+                   continue;
+                }
+
+                // Now, invoke the function, and add the resulting tool call message to the chat options.
+                s_inflightAutoInvokes.Value++;
+                object? functionResult;
+                try
+                {
+                    // Note that we explicitly do not use executionSettings here; those pertain to the all-up operation and not necessarily to any
+                    // further calls made as part of this function invocation. In particular, we must not use function calling settings naively here,
+                    // as the called function could in turn telling the model about itself as a possible candidate for invocation.
+                    functionResult = (await function.InvokeAsync(kernel, functionArgs, cancellationToken: cancellationToken).ConfigureAwait(false)).GetValue<object>() ?? string.Empty;
+
+                    //it worked, add the result to the ChatHistory so the LLM can work with it
+                    chat.AddMessage(AuthorRole.Tool, functionResult as string ?? JsonSerializer.Serialize(functionResult));
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e)
+#pragma warning restore CA1031
+                {
+                    chat.AddMessage(AuthorRole.Tool, $"Error: Exception while invoking function. {e.Message}"); //todo: use metadata and better logging                  
+                    continue;
+                }
+                finally
+                {
+                    s_inflightAutoInvokes.Value--;
+                }
+            }
+
+                // Respect the tool's maximum use attempts and maximum auto-invoke attempts.
+                Debug.Assert(textExecutionSettings.ToolCallBehavior is not null);
+
+        if (iteration >= textExecutionSettings.ToolCallBehavior!.MaximumAutoInvokeAttempts)
+        {
+            autoInvoke = false;
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Maximum auto-invoke ({MaximumAutoInvoke}) reached.", textExecutionSettings.ToolCallBehavior!.MaximumAutoInvokeAttempts);
+            }
+        }
+    }
+}
+
+    private void AddToolCallsToPromptExecutionSettings(MistralPromptExecutionSettings executionSettings, Kernel? kernel)
+    {
+        executionSettings.ToolCallBehavior?.ConfigureOptions(kernel, executionSettings);
     }
 
     private async Task<MistralAIChatEndpointResponse> CallMistralChatEndpointAsync(ChatHistory chat, MistralPromptExecutionSettings textExecutionSettings)
@@ -141,6 +267,8 @@ internal sealed class MistralClientCore
 
     private static List<Message> PrepareChatMessages(ChatHistory chat)
     {
+
+        //TODO: add tool calls here
         List<Message> messages = new();
         foreach (var msg in chat)
         {
@@ -154,7 +282,10 @@ internal sealed class MistralClientCore
             {
                 role = "system";
             }
-
+            if (msg.Role == AuthorRole.Tool)
+            {
+                role = "tool";
+            }
             messages.Add(new Message(role, msg.Content));
         }
         //except for the first message there can not be any other system messages

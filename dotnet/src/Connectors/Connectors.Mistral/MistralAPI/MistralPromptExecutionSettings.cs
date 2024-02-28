@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -95,6 +96,9 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
         }
     }
 
+    public ChatCompletionsToolChoice ToolChoice { get;  set; }
+    public List<FunctionDefinition> Tools { get;  set; }
+
     /// <summary>
     /// Create a new settings object with the values from another settings object.
     /// </summary>
@@ -126,4 +130,6 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
 
         throw new ArgumentException($"Invalid execution settings, cannot convert to {nameof(MistralPromptExecutionSettings)}", nameof(executionSettings));
     }
+    private ToolCallBehavior? _toolCallBehavior;
+
 }

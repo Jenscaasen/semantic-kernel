@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.API;
 /// <summary>
@@ -41,6 +43,7 @@ internal sealed class MistralAIChatEndpointResponse
     /// Gets the usage statistics for the response.
     /// </summary>
     public Usage usage { get; set; }
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MistralAIChatEndpointResponse"/> class.
@@ -133,6 +136,11 @@ public class Choice
     /// </summary>
     [JsonPropertyName("finish_reason")]
     public string FinnishReason { get; set; }
+
+    /// <summary>
+    /// A list of the tools called by the model.
+    /// </summary>
+    public IReadOnlyList<ChatCompletionsToolCall> tool_calls { get; }
 }
 
 /// <summary>
