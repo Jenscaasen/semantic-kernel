@@ -75,8 +75,13 @@ public class MistralAiChatEndpointRequest
         this.Seed = textExecutionSettings.Seed;
         this.MaxTokens = textExecutionSettings.MaxTokens ?? MistralPromptExecutionSettings.DefaultTextMaxTokens; //otherwise the endpoint crashes at the moment
 
-        this.Tools = textExecutionSettings.Tools.Select(t => new ToolDefinition { type = "function", function = t }).ToList();                                                                                            //   this.Tools
-
+        if (textExecutionSettings.Tools != null)
+        {
+            this.Tools = textExecutionSettings.Tools.Select(t => new ToolDefinition { type = "function", function = t }).ToList();
+        } else
+        {
+            this.Tools = new List<ToolDefinition>();
+        }
     }
 
     private double Clamp(double value, double min, double max)

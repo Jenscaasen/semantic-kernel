@@ -16,7 +16,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.Mistral.API;
-using Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
 using Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 using Microsoft.SemanticKernel.Http;
 
@@ -147,7 +146,7 @@ internal sealed class MistralClientCore
 
             var toolCalls = responseData.choices[0].message.tool_calls;
 
-            if (!autoInvoke || toolCalls == null || toolCalls.Count== 0)
+            if (!autoInvoke || toolCalls == null || toolCalls.Count == 0)
             {
                 //nothing to call, return as normal result
                 return defaultResult;
@@ -202,7 +201,6 @@ internal sealed class MistralClientCore
                     //it worked, add the result to the ChatHistory so the LLM can work with it
 
                     chat.Add(new MistralToolMessageContent(toolCall.function.name, functionResult as string ?? JsonSerializer.Serialize(functionResult)));
-                   
                 }
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e)
@@ -266,8 +264,8 @@ internal sealed class MistralClientCore
         List<Message> messages = new();
         foreach (var msg in chat)
         {
-            Message message = new Message("assistant", msg.Content);
-            
+            Message message = new("assistant", msg.Content);
+
             switch (msg.Role)
             {
                 case var role when role.Equals(AuthorRole.User):
@@ -278,7 +276,7 @@ internal sealed class MistralClientCore
                     break;
                 case var role when role.Equals(AuthorRole.Tool):
                     message.role = "tool";
-                    if(msg is MistralToolMessageContent)
+                    if (msg is MistralToolMessageContent)
                     {
                         message.tool_name = ((MistralToolMessageContent)msg).FunctionName;
                     }

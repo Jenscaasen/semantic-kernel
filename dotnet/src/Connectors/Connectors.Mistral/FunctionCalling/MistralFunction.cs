@@ -77,7 +77,8 @@ public sealed class MistralFunction
     /// This is an optimization to avoid serializing the same JSON Schema over and over again
     /// for this relatively common case.
     /// </remarks>
-    private static readonly dynamic s_zeroFunctionParametersSchema = new {
+    private static readonly dynamic s_zeroFunctionParametersSchema = new
+    {
         type = "object",
         required = new string[0],
         properties = new { }
@@ -157,11 +158,12 @@ public sealed class MistralFunction
                     required.Add(parameter.Name);
                 }
             }
-            resultParameters = new {
-                type="object",
-               required = required,
-               properties = properties
-            }; 
+            resultParameters = new
+            {
+                type = "object",
+                required = required,
+                properties = properties
+            };
         }
 
         return new FunctionDefinition

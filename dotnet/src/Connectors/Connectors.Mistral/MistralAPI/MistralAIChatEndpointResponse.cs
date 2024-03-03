@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-using Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.API;
 /// <summary>
@@ -135,7 +134,6 @@ public class Choice
     /// </summary>
     [JsonPropertyName("finish_reason")]
     public string FinnishReason { get; set; }
-
 }
 
 /// <summary>
