@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using Microsoft.SemanticKernel.Connectors.Mistral.API;
 using Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral;
@@ -17,16 +17,13 @@ public sealed class MistralFunctionToolCall
     private string? _fullyQualifiedFunctionName;
 
     /// <summary>Initialize the <see cref="MistralFunctionToolCall"/> from a <see cref="ChatCompletionsToolCall"/>.</summary>
-    internal MistralFunctionToolCall(ChatCompletionsToolCall toolCall)
+    internal MistralFunctionToolCall(tool_call_function toolCallFunction)
     {
-        Verify.NotNull(toolCall);
-        Verify.NotNull(toolCall.function);
+        Verify.NotNull(toolCallFunction);
 
-        ChatCompletionsToolFunctionCall functionCall = toolCall.function;
-
-        string fullyQualifiedFunctionName = functionCall.name;
+        string fullyQualifiedFunctionName = toolCallFunction.name;
         string functionName = fullyQualifiedFunctionName;
-        string? arguments = functionCall.arguments;
+        string? arguments = toolCallFunction.arguments;
         string? pluginName = null;
 
         int separatorPos = fullyQualifiedFunctionName.IndexOf(MistralFunction.NameSeparator, StringComparison.Ordinal);
@@ -36,7 +33,6 @@ public sealed class MistralFunctionToolCall
             functionName = fullyQualifiedFunctionName.AsSpan(separatorPos + MistralFunction.NameSeparator.Length).Trim().ToString();
         }
 
-        this.Id = toolCall.id;
         this._fullyQualifiedFunctionName = fullyQualifiedFunctionName;
         this.PluginName = pluginName;
         this.FunctionName = functionName;
@@ -88,9 +84,7 @@ public sealed class MistralFunctionToolCall
         return sb.ToString();
     }
 
-
     //TODO: Streaming Tool calls disabled for now, that is a ton of work
-
 
     ///// <summary>
     ///// Tracks tooling updates from streaming responses.

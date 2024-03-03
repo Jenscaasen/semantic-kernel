@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.Json.Serialization;
+using Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
 using Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.API;
@@ -46,6 +49,9 @@ public class MistralAiChatEndpointRequest
     /// </summary>
     [JsonPropertyName("max_tokens")]
     public int? MaxTokens { get; set; }
+    [JsonPropertyName("tools")]
+    public List<ToolDefinition> Tools { get; set; }
+
     /// <summary>
     /// TopP controls the diversity of the completion.
     /// The higher the TopP, the more diverse the completion.
@@ -69,7 +75,7 @@ public class MistralAiChatEndpointRequest
         this.Seed = textExecutionSettings.Seed;
         this.MaxTokens = textExecutionSettings.MaxTokens ?? MistralPromptExecutionSettings.DefaultTextMaxTokens; //otherwise the endpoint crashes at the moment
 
-        //TODO: Add Tools from textexecutionsettings
+        this.Tools = textExecutionSettings.Tools.Select(t => new ToolDefinition { type = "function", function = t }).ToList();                                                                                            //   this.Tools
 
     }
 

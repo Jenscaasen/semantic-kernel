@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
@@ -133,10 +132,13 @@ public abstract class ToolCallBehavior
                 IList<KernelFunctionMetadata> functions = kernel.Plugins.GetFunctionsMetadata();
                 if (functions.Count > 0)
                 {
+                    options.Tools = new List<FunctionDefinition>();
                     options.ToolChoice = ChatCompletionsToolChoice.Auto;
                     for (int i = 0; i < functions.Count; i++)
                     {
-                        options.Tools.Add(functions[i].ToMistralFunction().ToFunctionDefinition());
+                        var mistralFunction = functions[i].ToMistralFunction();
+                        var functionDefinition = mistralFunction.ToFunctionDefinition();
+                        options.Tools.Add(functionDefinition);
                     }
                 }
             }
@@ -175,7 +177,7 @@ public abstract class ToolCallBehavior
 
             if (MistralFunctions.Length > 0)
             {
-                bool autoInvoke = MaximumAutoInvokeAttempts > 0;
+                bool autoInvoke = this.MaximumAutoInvokeAttempts > 0;
 
                 // If auto-invocation is specified, we need a kernel to be able to invoke the functions.
                 // Lack of a kernel is fatal: we don't want to tell the model we can handle the functions

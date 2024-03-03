@@ -77,7 +77,11 @@ public sealed class MistralFunction
     /// This is an optimization to avoid serializing the same JSON Schema over and over again
     /// for this relatively common case.
     /// </remarks>
-    private static readonly BinaryData s_zeroFunctionParametersSchema = new("{\"type\":\"object\",\"required\":[],\"properties\":{}}");
+    private static readonly dynamic s_zeroFunctionParametersSchema = new {
+        type = "object",
+        required = new string[0],
+        properties = new { }
+    };
     /// <summary>
     /// Cached schema for a descriptionless string.
     /// </summary>
@@ -136,7 +140,7 @@ public sealed class MistralFunction
     /// <returns>A <see cref="FunctionDefinition"/> containing all the function information.</returns>
     public FunctionDefinition ToFunctionDefinition()
     {
-        BinaryData resultParameters = s_zeroFunctionParametersSchema;
+        dynamic resultParameters = s_zeroFunctionParametersSchema;
 
         IReadOnlyList<MistralFunctionParameter>? parameters = this.Parameters;
         if (parameters is { Count: > 0 })
@@ -153,13 +157,11 @@ public sealed class MistralFunction
                     required.Add(parameter.Name);
                 }
             }
-
-            resultParameters = BinaryData.FromObjectAsJson(new
-            {
-                type = "object",
-                required,
-                properties,
-            });
+            resultParameters = new {
+                type="object",
+               required = required,
+               properties = properties
+            }; 
         }
 
         return new FunctionDefinition

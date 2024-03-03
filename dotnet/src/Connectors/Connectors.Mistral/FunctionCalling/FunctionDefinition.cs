@@ -1,13 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
 public class FunctionDefinition
 {
-    public string Name { get;  set; }
-    public string? Description { get;  set; }
-    public BinaryData Parameters { get;  set; }
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+    [JsonPropertyName("parameters")]
+    public object Parameters { get; set; }
 }

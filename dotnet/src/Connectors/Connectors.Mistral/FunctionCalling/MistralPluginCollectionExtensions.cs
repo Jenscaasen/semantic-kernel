@@ -8,7 +8,7 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// Extension methods for <see cref="IReadOnlyKernelPluginCollection"/>.
 /// </summary>
 public static class MistralPluginCollectionExtensions
-{   
+{
     /// <summary>
     /// Given an <see cref="MistralFunctionToolCall"/> object, tries to retrieve the corresponding <see cref="KernelFunction"/> and populate <see cref="KernelArguments"/> with its parameters.
     /// </summary>

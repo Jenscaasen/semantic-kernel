@@ -12,48 +12,42 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// <summary>
 /// Mistral specialized chat message content
 /// </summary>
-public sealed class MistralChatMessageContent : ChatMessageContent
+public sealed class MistralAssitantMessageContent : ChatMessageContent
 {
-    /// <summary>
-    /// Gets the metadata key for the <see cref="ChatCompletionsToolCall.Id"/> name property.
-    /// </summary>
-    public static string ToolIdProperty => $"{nameof(ChatCompletionsToolCall)}.{nameof(ChatCompletionsToolCall.id)}";
-
     /// <summary>
     /// Gets the metadata key for the list of <see cref="ChatCompletionsFunctionToolCall"/>.
     /// </summary>
     internal static string FunctionToolCallsProperty => $"{nameof(MistralAIChatEndpointResponse)}.FunctionToolCalls";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="MistralChatMessageContent"/> class.
+    /// Initializes a new instance of the <see cref="MistralAssitantMessageContent"/> class.
     /// </summary>
     /// <param name="chatMessage">chat message</param>
-    /// <param name="modelId">The model ID used to generate the content</param>
     /// <param name="metadata">Additional metadata</param>
-    internal MistralChatMessageContent(AuthorRole role, MistralAIChatEndpointResponse chatMessage, IReadOnlyDictionary<string, object?>? metadata = null)
-        : base(role, chatMessage.choices[0].message.content, chatMessage.model, chatMessage, System.Text.Encoding.UTF8, CreateMetadataDictionary(chatMessage.choices[0].tool_calls, metadata))
+    internal MistralAssitantMessageContent(AuthorRole role, MistralAIChatEndpointResponse chatMessage, IReadOnlyDictionary<string, object?>? metadata = null)
+        : base(role, chatMessage.choices[0].message.content, chatMessage.model, chatMessage, System.Text.Encoding.UTF8, CreateMetadataDictionary(chatMessage.choices[0].message.tool_calls, metadata))
     {
-        this.ToolCalls = chatMessage.choices[0].tool_calls;
+        this.ToolCalls = chatMessage.choices[0].message.tool_calls;
     }
 
     /// <summary>
     /// A list of the tools called by the model.
     /// </summary>
-    public IReadOnlyList<ChatCompletionsToolCall> ToolCalls { get; }
+    public IReadOnlyList<tool_call> ToolCalls { get; }
 
     /// <summary>
     /// Retrieve the resulting function from the chat result.
     /// </summary>
-    /// <returns>The <see cref="ChatCompletionsToolCall"/>, or null if no function was returned by the model.</returns>
-    public IReadOnlyList<ChatCompletionsToolCall> GetMistralFunctionToolCalls()
+    /// <returns>The <see cref="tool_call"/>, or null if no function was returned by the model.</returns>
+    public IReadOnlyList<tool_call> GetMistralFunctionToolCalls()
     {
-        List<ChatCompletionsToolCall>? functionToolCallList = null;
+        List<tool_call>? functionToolCallList = null;
 
         foreach (var toolCall in this.ToolCalls)
         {
-            if (toolCall is ChatCompletionsToolCall functionToolCall)
+            if (toolCall is tool_call functionToolCall)
             {
-                (functionToolCallList ??= new List<ChatCompletionsToolCall>()).Add(functionToolCall);
+                (functionToolCallList ??= new List<tool_call>()).Add(functionToolCall);
             }
         }
 
@@ -62,11 +56,11 @@ public sealed class MistralChatMessageContent : ChatMessageContent
             return functionToolCallList;
         }
 
-        return Array.Empty<ChatCompletionsToolCall>();
+        return Array.Empty<tool_call>();
     }
 
     private static IReadOnlyDictionary<string, object?>? CreateMetadataDictionary(
-        IReadOnlyList<ChatCompletionsToolCall> toolCalls,
+        IReadOnlyList<tool_call> toolCalls,
         IReadOnlyDictionary<string, object?>? original)
     {
         // We only need to augment the metadata if there are any tool calls.
@@ -94,7 +88,7 @@ public sealed class MistralChatMessageContent : ChatMessageContent
             }
 
             // Add the additional entry.
-            newDictionary.Add(FunctionToolCallsProperty, toolCalls.OfType<ChatCompletionsToolCall>().ToList());
+            newDictionary.Add(FunctionToolCallsProperty, toolCalls.OfType<tool_call>().ToList());
 
             return newDictionary;
         }

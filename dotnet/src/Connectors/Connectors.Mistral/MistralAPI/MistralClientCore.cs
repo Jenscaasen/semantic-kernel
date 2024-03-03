@@ -29,7 +29,6 @@ namespace Microsoft.SemanticKernel.Connectors.Mistral;
 /// </summary>
 internal sealed class MistralClientCore
 {
-
     /// <summary>
     /// The maximum number of auto-invokes that can be in-flight at any given time as part of the current
     /// asynchronous chain of execution.
@@ -133,8 +132,8 @@ internal sealed class MistralClientCore
             // Make the request.
             MistralAIChatEndpointResponse responseData = await this.CallMistralChatEndpointAsync(chat, textExecutionSettings).ConfigureAwait(false);
 
-       // ChatMessageContent content = new(AuthorRole.Assistant, responseData.choices[0].message.content);
-          
+            // ChatMessageContent content = new(AuthorRole.Assistant, responseData.choices[0].message.content);
+
             IReadOnlyDictionary<string, object?> metadata = new Dictionary<string, object?>()
         {
             {"Usage", responseData.usage }
@@ -146,44 +145,38 @@ internal sealed class MistralClientCore
           metadata: metadata
        )).ToList();
 
-            var toolCalls = responseData.choices[0].tool_calls;
+            var toolCalls = responseData.choices[0].message.tool_calls;
 
-            if (!autoInvoke || toolCalls.Count == 0)
+            if (!autoInvoke || toolCalls == null || toolCalls.Count== 0)
             {
                 //nothing to call, return as normal result
                 return defaultResult;
             }
 
             //Some tool calling going on
-         
-            MistralChatMessageContent assistantResult = new MistralChatMessageContent(AuthorRole.Assistant, responseData);
+
+            MistralAssitantMessageContent assistantResult = new(AuthorRole.Assistant, responseData);
             //adding to the history
             chat.Add(assistantResult);
 
             // We must send back a response for every tool call, regardless of whether we successfully executed it or not.
             // If we successfully execute it, we'll add the result. If we don't, we'll add an error.
-         
+
             for (int i = 0; i < toolCalls.Count; i++)
             {
-                ChatCompletionsToolCall toolCall = toolCalls[i];
-                ChatCompletionsToolFunctionCall functionCall = toolCall.function;
-
-                // We currently only know about function tool calls. If it's anything else, we'll respond with an error.
-                if (functionCall is not ChatCompletionsToolFunctionCall functionToolCall)
-                {
-                    chat.AddMessage(AuthorRole.Tool, $"Error: Tool call with ID {toolCall.id} was not a function call, but: '{toolCall.type}'."); //todo: use metadata and better logging
-                    continue;
-                }
+                var toolCall = toolCalls[i];
+                tool_call_function functionCall = toolCall.function;
 
                 // Parse the function call arguments.
                 MistralFunctionToolCall? openAIFunctionToolCall;
+
                 try
                 {
-                    openAIFunctionToolCall = new(toolCall);
+                    openAIFunctionToolCall = new(toolCall.function);
                 }
                 catch (JsonException)
                 {
-                    chat.AddMessage(AuthorRole.Tool, "Error: Function call arguments were invalid JSON."); //todo: use metadata and better logging
+                    chat.Add(new MistralToolMessageContent(toolCall.function.name, "Error: Function call arguments were invalid JSON.")); //todo: use metadata and better logging
                     continue;
                 }
 
@@ -192,8 +185,8 @@ internal sealed class MistralClientCore
                 // Find the function in the kernel and populate the arguments.
                 if (!kernel!.Plugins.TryGetFunctionAndArguments(openAIFunctionToolCall, out KernelFunction? function, out KernelArguments? functionArgs))
                 {
-                    chat.AddMessage(AuthorRole.Tool, $"Error: Requested function '{openAIFunctionToolCall.FullyQualifiedName}' could not be found."); //todo: use metadata and better logging
-                   continue;
+                    chat.Add(new MistralToolMessageContent(toolCall.function.name, $"Error: Requested function '{openAIFunctionToolCall.FullyQualifiedName}' could not be found.")); //todo: use metadata and better logging
+                    continue;
                 }
 
                 // Now, invoke the function, and add the resulting tool call message to the chat options.
@@ -207,13 +200,15 @@ internal sealed class MistralClientCore
                     functionResult = (await function.InvokeAsync(kernel, functionArgs, cancellationToken: cancellationToken).ConfigureAwait(false)).GetValue<object>() ?? string.Empty;
 
                     //it worked, add the result to the ChatHistory so the LLM can work with it
-                    chat.AddMessage(AuthorRole.Tool, functionResult as string ?? JsonSerializer.Serialize(functionResult));
+
+                    chat.Add(new MistralToolMessageContent(toolCall.function.name, functionResult as string ?? JsonSerializer.Serialize(functionResult)));
+                   
                 }
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e)
 #pragma warning restore CA1031
                 {
-                    chat.AddMessage(AuthorRole.Tool, $"Error: Exception while invoking function. {e.Message}"); //todo: use metadata and better logging                  
+                    chat.Add(new MistralToolMessageContent(toolCall.function.name, $"Error: Exception while invoking function: {e.Message}")); //todo: use metadata and better logging                  
                     continue;
                 }
                 finally
@@ -222,19 +217,19 @@ internal sealed class MistralClientCore
                 }
             }
 
-                // Respect the tool's maximum use attempts and maximum auto-invoke attempts.
-                Debug.Assert(textExecutionSettings.ToolCallBehavior is not null);
+            // Respect the tool's maximum use attempts and maximum auto-invoke attempts.
+            Debug.Assert(textExecutionSettings.ToolCallBehavior is not null);
 
-        if (iteration >= textExecutionSettings.ToolCallBehavior!.MaximumAutoInvokeAttempts)
-        {
-            autoInvoke = false;
-            if (this.Logger.IsEnabled(LogLevel.Debug))
+            if (iteration >= textExecutionSettings.ToolCallBehavior!.MaximumAutoInvokeAttempts)
             {
-                this.Logger.LogDebug("Maximum auto-invoke ({MaximumAutoInvoke}) reached.", textExecutionSettings.ToolCallBehavior!.MaximumAutoInvokeAttempts);
+                autoInvoke = false;
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Maximum auto-invoke ({MaximumAutoInvoke}) reached.", textExecutionSettings.ToolCallBehavior!.MaximumAutoInvokeAttempts);
+                }
             }
         }
     }
-}
 
     private void AddToolCallsToPromptExecutionSettings(MistralPromptExecutionSettings executionSettings, Kernel? kernel)
     {
@@ -267,26 +262,40 @@ internal sealed class MistralClientCore
 
     private static List<Message> PrepareChatMessages(ChatHistory chat)
     {
-
         //TODO: add tool calls here
         List<Message> messages = new();
         foreach (var msg in chat)
         {
-            string role = "assistant";
-            if (msg.Role == AuthorRole.User)
+            Message message = new Message("assistant", msg.Content);
+            
+            switch (msg.Role)
             {
-                role = "user";
+                case var role when role.Equals(AuthorRole.User):
+                    message.role = "user";
+                    break;
+                case var role when role.Equals(AuthorRole.System):
+                    message.role = "system";
+                    break;
+                case var role when role.Equals(AuthorRole.Tool):
+                    message.role = "tool";
+                    if(msg is MistralToolMessageContent)
+                    {
+                        message.tool_name = ((MistralToolMessageContent)msg).FunctionName;
+                    }
+                    break;
+                case var role when role.Equals(AuthorRole.Assistant):
+                    message.role = "assistant";
+                    if (msg is MistralAssitantMessageContent)
+                    {
+                        message.tool_calls = ((MistralAssitantMessageContent)msg).ToolCalls!.ToList();
+                    }
+                    break;
+                default:
+                    // Handle the default case here if necessary
+                    break;
             }
 
-            if (msg.Role == AuthorRole.System)
-            {
-                role = "system";
-            }
-            if (msg.Role == AuthorRole.Tool)
-            {
-                role = "tool";
-            }
-            messages.Add(new Message(role, msg.Content));
+            messages.Add(message);
         }
         //except for the first message there can not be any other system messages
 
@@ -298,7 +307,7 @@ internal sealed class MistralClientCore
             }
         }
         //hack: the API does not like system-only requests, but the InvokePrompt does that by default
-        if (messages.Last().role != "user")
+        if (messages.Last().role != "user" && messages.Last().role != "tool")
         {
             messages.Last().role = "user";
         }

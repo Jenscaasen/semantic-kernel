@@ -53,8 +53,6 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
     /// </summary>
     internal static int DefaultTextMaxTokens { get; } = 4192;
 
-
-
     /// <summary>
     /// Gets or sets the behavior for how tool calls are handled.
     /// </summary>
@@ -96,8 +94,11 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
         }
     }
 
-    public ChatCompletionsToolChoice ToolChoice { get;  set; }
-    public List<FunctionDefinition> Tools { get;  set; }
+    public ChatCompletionsToolChoice ToolChoice { get; set; }
+    /// <summary>
+    /// The list of tools to invoke. If a kernel is provided with plugins, this will be populated automatically
+    /// </summary>
+    public List<FunctionDefinition> Tools { get; set; }
 
     /// <summary>
     /// Create a new settings object with the values from another settings object.
@@ -131,5 +132,4 @@ public sealed class MistralPromptExecutionSettings : PromptExecutionSettings
         throw new ArgumentException($"Invalid execution settings, cannot convert to {nameof(MistralPromptExecutionSettings)}", nameof(executionSettings));
     }
     private ToolCallBehavior? _toolCallBehavior;
-
 }

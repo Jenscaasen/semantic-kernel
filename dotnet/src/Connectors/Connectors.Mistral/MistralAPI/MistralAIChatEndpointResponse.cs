@@ -44,7 +44,6 @@ internal sealed class MistralAIChatEndpointResponse
     /// </summary>
     public Usage usage { get; set; }
 
-
     /// <summary>
     /// Initializes a new instance of the <see cref="MistralAIChatEndpointResponse"/> class.
     /// </summary>
@@ -137,10 +136,6 @@ public class Choice
     [JsonPropertyName("finish_reason")]
     public string FinnishReason { get; set; }
 
-    /// <summary>
-    /// A list of the tools called by the model.
-    /// </summary>
-    public IReadOnlyList<ChatCompletionsToolCall> tool_calls { get; }
 }
 
 /// <summary>
@@ -168,4 +163,19 @@ public class Message
     /// Gets the content of the message.
     /// </summary>
     public string content { get; set; }
+
+    [JsonPropertyName("name")]
+    public string tool_name { get; set; }
+    public List<tool_call> tool_calls { get; set; }
+}
+
+public class tool_call
+{
+    public tool_call_function function { get; set; }
+}
+
+public class tool_call_function
+{
+    public string name { get; set; }
+    public string arguments { get; set; }
 }

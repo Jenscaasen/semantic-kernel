@@ -11,6 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.Mistral;
+using Microsoft.SemanticKernel.Connectors.Mistral.FunctionCalling;
+using Microsoft.SemanticKernel.Connectors.Mistral.MistralAPI;
 using SemanticKernel.IntegrationTests.TestSettings;
 using Xunit;
 using Xunit.Abstractions;
@@ -86,6 +90,27 @@ public sealed class MistralCompletionTests : IDisposable
 
         // Assert
         Assert.Contains(expectedAnswerContains, actual.GetValue<string>(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("Get me the secret number 3 from the secret vault", "Claude Monet")]
+    public async Task MistralSingleFunctionExecutionTestAsync(string prompt, string expectedAnswerContains)
+    {
+        // Arrange
+        this._kernelBuilder.Services.AddSingleton<ILoggerFactory>(this._logger);
+        IKernelBuilder builder = this._kernelBuilder;
+        builder.Plugins.AddFromType<SecretVaultSampleFunction>();
+        this.ConfigureChatMistral(builder);
+
+        Kernel kernel = builder.Build();
+        MistralAIChatCompletionService service = (MistralAIChatCompletionService)kernel.Services.GetService(typeof(IChatCompletionService));
+        MistralPromptExecutionSettings settings = new() { ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions };
+
+        // Act
+        var functionCallResult = await service.GetChatMessageContentAsync(prompt, settings);
+
+        // Assert
+        Assert.Contains(expectedAnswerContains, functionCallResult.Content, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
