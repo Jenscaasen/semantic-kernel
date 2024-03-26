@@ -49,12 +49,17 @@ internal sealed class MistralClientCore
     /// <summary>Tracking <see cref="AsyncLocal{Int32}"/> for <see cref="MaxInflightAutoInvokes"/>.</summary>
     private static readonly AsyncLocal<int> s_inflightAutoInvokes = new();
 
-    internal MistralClientCore(string modelName, string apiKey, HttpClient? httpClient = null, ILogger? logger = null)
+    internal MistralClientCore(string modelName, string apiKey, string? endpoint = null, HttpClient? httpClient = null, ILogger? logger = null)
     {
         this._apiKey = apiKey;
         this._httpClient = HttpClientProvider.GetHttpClient(httpClient);
+        this._endpoint = endpoint ?? "https://api.mistral.ai/v1";
         this.DeploymentOrModelName = modelName;
         this.Logger = logger ?? NullLogger.Instance;
+    }
+
+    internal MistralClientCore(string modelName, string apiKey, HttpClient? httpClient = null, ILogger? logger = null) : this(modelName, apiKey, null, httpClient, logger)
+    {
     }
 
     /// <summary>
@@ -69,6 +74,7 @@ internal sealed class MistralClientCore
 
     private readonly string _apiKey;
     private readonly HttpClient _httpClient;
+    private readonly string _endpoint;
 
     /// <summary>
     /// Storage for AI service attributes.
@@ -249,7 +255,7 @@ internal sealed class MistralClientCore
         string requestJson = JsonSerializer.Serialize(request);
         using (var content = new StringContent(requestJson, Encoding.UTF8, "application/json"))
         {
-            string url = "https://api.mistral.ai/v1/chat/completions";
+            string url = $"{this._endpoint}/chat/completions";
             var response = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
             var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
@@ -319,7 +325,7 @@ internal sealed class MistralClientCore
 
         using (var content = new StringContent(JsonSerializer.Serialize(embeddingRequest), Encoding.UTF8, "application/json"))
         {
-            string url = "https://api.mistral.ai/v1/embeddings";
+            string url = $"{this._endpoint}/embeddings";
             var response = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
             var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             if (string.IsNullOrEmpty(responseContent))
@@ -345,7 +351,7 @@ internal sealed class MistralClientCore
         string requestJson = JsonSerializer.Serialize(request);
         using (var content = new StringContent(requestJson, Encoding.UTF8, "application/json"))
         {
-            string url = "https://api.mistral.ai/v1/chat/completions";
+            string url = $"{this._endpoint}/chat/completions";
             var response = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
             return response;
         }
