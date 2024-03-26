@@ -115,7 +115,7 @@ public static class MistralServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds the Mistral chat completion service to the list.
+    /// Adds the Mistral text completion service to the list.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
     /// <param name="modelId">Mistral model name</param>
@@ -142,6 +142,69 @@ public static class MistralServiceCollectionExtensions
 
         return services;
     }
+
+    #region Azure Mistral
+    /// <summary>
+    /// Adds the Azure-hosted Mistral chat completion service to the list.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
+    /// <param name="endpoint">Mistral endpoint</param>
+    /// <param name="modelId">Mistral model name</param>
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <returns>The same instance as <paramref name="services"/>.</returns>
+    public static IServiceCollection AddAzureMistralChatCompletion(
+        this IServiceCollection services,
+        string endpoint,
+        string modelId,
+        string apiKey,
+        string? serviceId = null)
+    {
+        Verify.NotNull(services);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
+
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
+        {
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient(serviceProvider), endpoint);
+        };
+
+        services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
+
+        return services;
+    }
+    /// <summary>
+    /// Adds the Azure-hosted Mistral text completion service to the list.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
+    /// <param name="endpoint">Mistral endpoint</param>
+    /// <param name="modelId">Mistral model name</param>
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <returns>The same instance as <paramref name="services"/>.</returns>
+    public static IServiceCollection AddAzureMistralTextCompletion(
+        this IServiceCollection services,
+        string endpoint,
+        string modelId,
+        string apiKey,
+        string? serviceId = null)
+    {
+        Verify.NotNull(services);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
+
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
+        {
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient(serviceProvider), endpoint);
+        };
+
+        services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
+
+        return services;
+    }
+    #endregion
     #endregion
 
     #region Text Embedding
