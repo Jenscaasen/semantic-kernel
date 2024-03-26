@@ -23,15 +23,17 @@ public sealed class MistralAIChatCompletionService : IChatCompletionService, ITe
     /// <param name="modelId">Model name</param>
     /// <param name="apiKey">Mistral API Key</param>
     /// <param name="httpClient">Custom <see cref="HttpClient"/> for HTTP requests.</param>
+    /// <param name="endpoint">Custom endpoint for the Mistral service.</param>
     public MistralAIChatCompletionService(
         string modelId,
         string apiKey,
-         HttpClient? httpClient = null)
+        HttpClient? httpClient = null,
+        string? endpoint = null)
     {
         Verify.NotNullOrWhiteSpace(modelId);
         Verify.NotNullOrWhiteSpace(apiKey);
 
-        this._core = new MistralClientCore(modelId, apiKey, httpClient);
+        this._core = new MistralClientCore(modelId, apiKey, endpoint, httpClient);
 
         this._core.AddAttribute(AIServiceExtensions.ModelIdKey, modelId);
     }
