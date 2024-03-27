@@ -147,6 +147,40 @@ public static class MistralServiceCollectionExtensions
     /// <summary>
     /// Adds the Azure-hosted Mistral chat completion service to the list.
     /// </summary>
+    /// <param name="builder">The <see cref="IKernelBuilder"/> instance to augment.</param>
+    /// <param name="endpoint">Mistral endpoint</param>
+    /// <param name="apiKey">Azure Mistral API key, see https://learn.microsoft.com/azure/cognitive-services/Mistral/quickstart</param>
+    /// <param name="modelId">Model identifier</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <param name="httpClient">The HttpClient to use with this service.</param>
+    /// <returns>The same instance as <paramref name="builder"/>.</returns>
+    public static IKernelBuilder AddAzureMistralChatCompletion(
+        this IKernelBuilder builder,
+        string endpoint,
+        string apiKey,
+        string modelId,
+        string? serviceId = null,
+        HttpClient? httpClient = null)
+    {
+        Verify.NotNull(builder);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
+
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
+        {
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider), endpoint);
+        };
+
+        builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
+        builder.Services.AddKeyedSingleton<ITextGenerationService>(serviceId, factory);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds the Azure-hosted Mistral chat completion service to the list.
+    /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> instance to augment.</param>
     /// <param name="endpoint">Mistral endpoint</param>
     /// <param name="modelId">Mistral model name</param>
@@ -173,6 +207,40 @@ public static class MistralServiceCollectionExtensions
         services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
 
         return services;
+    }
+
+    /// <summary>
+    /// Adds the Azure-hosted Mistral text completion service to the list.
+    /// </summary>
+    /// <param name="builder">The <see cref="IKernelBuilder"/> instance to augment.</param>
+    /// <param name="endpoint">Mistral endpoint</param>
+    /// <param name="apiKey">Mistral API key</param>
+    /// <param name="modelId">Model identifier</param>
+    /// <param name="serviceId">A local identifier for the given AI service</param>
+    /// <param name="httpClient">The HttpClient to use with this service.</param>
+    /// <returns>The same instance as <paramref name="builder"/>.</returns>
+    public static IKernelBuilder AddMistralTextCompletion(
+        this IKernelBuilder builder,
+        string endpoint,
+        string apiKey,
+        string modelId,
+        string? serviceId = null,
+        HttpClient? httpClient = null)
+    {
+        Verify.NotNull(builder);
+        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhiteSpace(apiKey);
+
+        Func<IServiceProvider, object?, MistralAIChatCompletionService> factory = (serviceProvider, _) =>
+        {
+            return new(modelId,
+               apiKey, HttpClientProvider.GetHttpClient(httpClient, serviceProvider), endpoint);
+        };
+
+        builder.Services.AddKeyedSingleton<IChatCompletionService>(serviceId, factory);
+        builder.Services.AddKeyedSingleton<ITextGenerationService>(serviceId, factory);
+
+        return builder;
     }
     /// <summary>
     /// Adds the Azure-hosted Mistral text completion service to the list.
