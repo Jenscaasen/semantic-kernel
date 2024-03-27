@@ -53,7 +53,7 @@ internal sealed class MistralClientCore
     {
         this._apiKey = apiKey;
         this._httpClient = HttpClientProvider.GetHttpClient(httpClient);
-        this._endpoint = endpoint ?? "https://api.mistral.ai/v1";
+        this._endpoint = endpoint ?? "https://api.mistral.ai";
         this.DeploymentOrModelName = modelName;
         this.Logger = logger ?? NullLogger.Instance;
     }
@@ -255,7 +255,7 @@ internal sealed class MistralClientCore
         string requestJson = JsonSerializer.Serialize(request);
         using (var content = new StringContent(requestJson, Encoding.UTF8, "application/json"))
         {
-            string url = $"{this._endpoint}/chat/completions";
+            string url = $"{this._endpoint}/v1/chat/completions";
             var response = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
             var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
@@ -325,7 +325,7 @@ internal sealed class MistralClientCore
 
         using (var content = new StringContent(JsonSerializer.Serialize(embeddingRequest), Encoding.UTF8, "application/json"))
         {
-            string url = $"{this._endpoint}/embeddings";
+            string url = $"{this._endpoint}/v1/embeddings";
             var response = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
             var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             if (string.IsNullOrEmpty(responseContent))
@@ -351,7 +351,7 @@ internal sealed class MistralClientCore
         string requestJson = JsonSerializer.Serialize(request);
         using (var content = new StringContent(requestJson, Encoding.UTF8, "application/json"))
         {
-            string url = $"{this._endpoint}/chat/completions";
+            string url = $"{this._endpoint}/v1/chat/completions";
             var response = await this.CallMistralAuthedAsync(url, content).ConfigureAwait(false);
             return response;
         }
